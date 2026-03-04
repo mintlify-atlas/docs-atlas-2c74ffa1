@@ -1,80 +1,304 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with the Opal Python SDK in minutes
 ---
 
-## Get started in three steps
+This guide will help you install the Opal Python SDK and make your first API call.
 
-Get your documentation site running locally and make your first customization.
+## Installation
 
-### Step 1: Set up your local environment
+<Steps>
+  <Step title="Install via pip">
+    The recommended way to install the Opal SDK is from PyPI using pip:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+    <CodeGroup>
+    ```bash pip
+    pip install opal-security
+    ```
+
+    ```bash pip (with sudo)
+    sudo pip install opal-security
+    ```
+    </CodeGroup>
+
+    <Note>
+      The SDK requires Python 3.9 or higher. Check your Python version with `python --version`.
+    </Note>
+  </Step>
+
+  <Step title="Alternative: Install from GitHub">
+    You can also install directly from the GitHub repository:
+
+    ```bash
+    pip install git+https://github.com/opalsecurity/opal-python.git
+    ```
+
+    For development or to install from source:
+
+    ```bash
+    git clone https://github.com/opalsecurity/opal-python.git
+    cd opal-python
+    python setup.py install --user
+    ```
+  </Step>
+
+  <Step title="Verify Installation">
+    Confirm the SDK is installed correctly:
+
+    ```python
+    import opal_security as opal
+    print(opal.__version__)
+    # Output: 1.0.0
+    ```
+  </Step>
+</Steps>
+
+## Basic Usage
+
+### Initialize the Client
+
+First, import the SDK and configure authentication:
+
+```python
+import os
+import opal_security as opal
+from opal_security.rest import ApiException
+
+# Configure the API client
+configuration = opal.Configuration(
+    host="https://api.opal.dev/v1",  # API endpoint (default)
+    access_token=os.environ["OPAL_API_TOKEN"]  # Your API token
+)
+
+# Create an API client instance
+api_client = opal.ApiClient(configuration)
+```
+
+<Warning>
+  Never hardcode your API token in source code. Always use environment variables or a secrets management system.
+</Warning>
+
+### Make Your First API Call
+
+Here's a simple example that lists all groups in your Opal organization:
+
+```python
+import opal_security as opal
+import os
+from pprint import pprint
+
+# Configure authentication
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+# Use context manager for automatic cleanup
+with opal.ApiClient(configuration) as api_client:
+    # Create an instance of the Groups API
+    groups_api = opal.GroupsApi(api_client)
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    try:
+        # Fetch all groups
+        response = groups_api.get_groups()
+        print("Groups in your organization:")
+        pprint(response.dict())
+    except ApiException as e:
+        print(f"Exception when calling GroupsApi->get_groups: {e}")
+```
+
+### Working with Access Requests
+
+Here's an example of creating an access request:
+
+```python
+import opal_security as opal
+import os
+from datetime import datetime, timedelta
+
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+with opal.ApiClient(configuration) as api_client:
+    requests_api = opal.RequestsApi(api_client)
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    # Create a new access request
+    request_info = opal.CreateRequestInfo(
+        requester_user_id="user-uuid-here",
+        resources=[
+            opal.CreateRequestInfoResourcesInner(
+                resource_id="resource-uuid-here",
+                access_level_remote_id="admin"
+            )
+        ],
+        reason="Need access for project deployment",
+        duration_minutes=480  # 8 hours
+    )
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    try:
+        response = requests_api.create_request(request_info)
+        print("Access request created successfully:")
+        print(f"Request ID: {response.id}")
+    except opal.ApiException as e:
+        print(f"Error creating request: {e}")
+```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+### Query Events
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Retrieve audit events with filtering:
 
-### Step 3: Go live
+```python
+import opal_security as opal
+import os
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
 
-## Next steps
+with opal.ApiClient(configuration) as api_client:
+    events_api = opal.EventsApi(api_client)
+    
+    try:
+        # Get events with filters
+        response = events_api.events(
+            start_date_filter="2024/01/01",
+            end_date_filter="2024/12/31",
+            page_size=100,
+            cursor=None  # Use for pagination
+        )
+        
+        for event in response.results:
+            print(f"{event.event_type}: {event.actor} -> {event.object}")
+            
+    except opal.ApiException as e:
+        print(f"Error fetching events: {e}")
+```
 
-Now that you have your docs running, explore these key features:
+## Common Patterns
 
-<CardGroup cols={2}>
+### Using Context Managers
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+Always use the `with` statement to ensure proper resource cleanup:
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+```python
+# Good: Context manager handles cleanup
+with opal.ApiClient(configuration) as api_client:
+    groups_api = opal.GroupsApi(api_client)
+    groups = groups_api.get_groups()
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+# Avoid: Manual cleanup required
+api_client = opal.ApiClient(configuration)
+try:
+    groups_api = opal.GroupsApi(api_client)
+    groups = groups_api.get_groups()
+finally:
+    api_client.close()  # Must remember to close
+```
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+### Error Handling
 
-</CardGroup>
+Handle API exceptions appropriately:
+
+```python
+from opal_security.rest import ApiException
+
+try:
+    response = groups_api.get_group(group_id="invalid-id")
+except ApiException as e:
+    print(f"Status code: {e.status}")
+    print(f"Reason: {e.reason}")
+    print(f"Body: {e.body}")
+    
+    # Handle specific error codes
+    if e.status == 404:
+        print("Group not found")
+    elif e.status == 401:
+        print("Invalid authentication credentials")
+    elif e.status == 403:
+        print("Access forbidden")
+```
+
+### Pagination
+
+Many list endpoints support pagination:
+
+```python
+def fetch_all_groups(groups_api):
+    """Fetch all groups using pagination."""
+    all_groups = []
+    cursor = None
+    
+    while True:
+        response = groups_api.get_groups(
+            cursor=cursor,
+            page_size=200  # Default is 200
+        )
+        
+        all_groups.extend(response.results)
+        
+        # Check if there are more pages
+        if not response.next:
+            break
+            
+        cursor = response.next
+    
+    return all_groups
+```
+
+## Type Hints and IDE Support
+
+The SDK is fully typed with Pydantic models:
+
+```python
+from typing import List
+import opal_security as opal
+
+def get_admin_groups(api_client: opal.ApiClient) -> List[opal.Group]:
+    """Get all groups with admin access level."""
+    groups_api = opal.GroupsApi(api_client)
+    response = groups_api.get_groups()
+    
+    # Type hints enable IDE autocomplete
+    admin_groups: List[opal.Group] = [
+        group for group in response.results
+        if group.group_type == opal.GroupTypeEnum.ADMIN
+    ]
+    
+    return admin_groups
+```
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  The SDK uses Pydantic 2 for data validation. All models provide runtime type checking and helpful error messages for invalid data.
 </Note>
+
+## Running Tests
+
+To run the SDK's test suite:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-cov
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=opal_security
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn about authentication methods and best practices
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Explore advanced configuration options
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/introduction">
+    Browse the complete API documentation
+  </Card>
+  <Card title="Examples" icon="code" href="https://github.com/opalsecurity/opal-python/tree/main/examples">
+    View more code examples on GitHub
+  </Card>
+</CardGroup>

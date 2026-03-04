@@ -1,122 +1,132 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Opal Python SDK",
+  "theme": "palm",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#9ec254",
+    "light": "#403f40",
+    "dark": "#f1f3e7"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/cf945c86-c4df-46e3-9766-9d2d02847b5d.svg",
+  "logo": {
+    "light": "https://media.brand.dev/38e0587a-5bfd-4eed-8452-b4a9ecdf31d7.jpg",
+    "dark": "https://media.brand.dev/cf945c86-c4df-46e3-9766-9d2d02847b5d.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/opalsecurity/opal-python"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/opalsecurity/opal-python"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "authentication",
+              "configuration"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/users-and-groups",
+              "concepts/resources",
+              "concepts/access-requests",
+              "concepts/pagination"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "guides/managing-users",
+              "guides/managing-groups",
+              "guides/managing-resources",
+              "guides/access-requests",
+              "guides/error-handling"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Users",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/users/users-api"
+            ]
+          },
+          {
+            "group": "Groups",
+            "pages": [
+              "api-reference/groups/groups-api",
+              "api-reference/groups/group-bindings-api"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "api-reference/resources/resources-api"
+            ]
+          },
+          {
+            "group": "Access Management",
+            "pages": [
+              "api-reference/access/requests-api",
+              "api-reference/access/access-rules-api",
+              "api-reference/access/delegations-api"
+            ]
+          },
+          {
+            "group": "Applications",
+            "pages": [
+              "api-reference/apps/apps-api",
+              "api-reference/apps/bundles-api"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api-reference/configuration/configuration-templates-api",
+              "api-reference/configuration/owners-api",
+              "api-reference/configuration/tags-api"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "api-reference/integrations/idp-group-mappings-api",
+              "api-reference/integrations/message-channels-api",
+              "api-reference/integrations/on-call-schedules-api"
+            ]
+          },
+          {
+            "group": "Monitoring",
+            "pages": [
+              "api-reference/monitoring/events-api",
+              "api-reference/monitoring/sessions-api",
+              "api-reference/monitoring/uars-api"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

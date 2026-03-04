@@ -1,0 +1,308 @@
+---
+title: "Resources and Access Levels"
+description: "Understanding resources, access levels, and resource permissions in the Opal Python SDK"
+---
+
+## Overview
+
+Resources in Opal represent any system, application, database, or infrastructure component that users need access to. Each resource can have multiple access levels that define the granularity of permissions users can request.
+
+## Resource Model
+
+The `Resource` object represents a requestable entity in your infrastructure. Resources can be cloud resources (AWS S3 buckets, GCP projects), applications (Snowflake, GitHub repos), or any other system managed through Opal.
+
+### Resource Structure
+
+```python
+from opal_security.models import Resource
+
+resource = Resource(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    app_id="750e8400-e29b-41d4-a716-446655440000",
+    name="production-database",
+    description="Main production PostgreSQL database",
+    admin_owner_id="550e8400-e29b-41d4-a716-446655440000",
+    resource_type="AWS_RDS_INSTANCE",
+    remote_resource_id="prod-db-01",
+    remote_resource_name="production-db-instance",
+    max_duration=480,  # 8 hours
+    recommended_duration=240,  # 4 hours
+    is_requestable=True,
+    require_manager_approval=True,
+    require_mfa_to_connect=True
+)
+```
+
+### Key Resource Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `resource_id` | UUID | Unique identifier for the resource |
+| `app_id` | UUID | ID of the connected application |
+| `name` | str | Name of the resource |
+| `description` | str | Description of the resource |
+| `admin_owner_id` | UUID | User ID of the resource owner |
+| `resource_type` | ResourceTypeEnum | Type of resource (AWS_S3_BUCKET, GITHUB_REPO, etc.) |
+| `remote_resource_id` | str | ID in the remote system |
+| `remote_resource_name` | str | Name in the remote system |
+| `max_duration` | int | Maximum access duration in minutes |
+| `recommended_duration` | int | Recommended access duration in minutes |
+| `is_requestable` | bool | Whether users can request access |
+
+<Note>
+The `resource_type` enum supports over 100 different resource types across cloud providers, SaaS applications, and custom connectors.
+</Note>
+
+### Resource Hierarchies
+
+Resources can have parent-child relationships to represent nested structures:
+
+```python
+resource = Resource(
+    resource_id="child-resource-id",
+    name="production-schema",
+    parent_resource_id="database-resource-id",
+    ancestor_resource_ids=[
+        "database-resource-id",
+        "cluster-resource-id",
+        "account-resource-id"
+    ],
+    descendant_resource_ids=[
+        "table1-resource-id",
+        "table2-resource-id"
+    ]
+)
+```
+
+<Info>
+**Ancestor resources** are all parents up the hierarchy tree. **Descendant resources** are all children down the tree.
+</Info>
+
+## Access Levels
+
+Access levels define the specific permissions granted when a user gains access to a resource. They map to permissions in the remote system.
+
+### ResourceAccessLevel Structure
+
+```python
+from opal_security.models import ResourceAccessLevel
+
+access_level = ResourceAccessLevel(
+    access_level_name="Read-Only Access",
+    access_level_remote_id="read_only"
+)
+```
+
+### Properties
+
+- **`access_level_name`**: Human-readable name displayed to users (e.g., "Admin", "Read-Only", "Editor")
+- **`access_level_remote_id`**: Machine-readable identifier used by the remote system
+
+<Note>
+The "default" access level has empty strings for both fields, representing standard access without additional permissions.
+</Note>
+
+### Common Access Level Examples
+
+<CardGroup cols={2}>
+  <Card title="AWS IAM" icon="aws">
+    - **Read-Only**: View resources
+    - **Power User**: Most permissions except IAM
+    - **Admin**: Full administrative access
+  </Card>
+  <Card title="GitHub Repository" icon="github">
+    - **Read**: Clone and view
+    - **Triage**: Manage issues
+    - **Write**: Push code
+    - **Admin**: Full repository control
+  </Card>
+</CardGroup>
+
+## Resource User Access
+
+The `ResourceUser` object represents a user's direct access to a resource, including their access level and expiration.
+
+### ResourceUser Structure
+
+```python
+from opal_security.models import ResourceUser, ResourceAccessLevel
+from datetime import datetime
+
+resource_user = ResourceUser(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000",
+    full_name="Alice Johnson",
+    email="alice@example.com",
+    access_level=ResourceAccessLevel(
+        access_level_name="Admin",
+        access_level_remote_id="admin"
+    ),
+    expiration_date=datetime(2026, 3, 11, 10, 0, 0)
+)
+```
+
+### Key Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `resource_id` | UUID | ID of the resource |
+| `user_id` | UUID | ID of the user with access |
+| `access_level` | ResourceAccessLevel | The granted access level |
+| `full_name` | str | User's full name |
+| `email` | str | User's email address |
+| `expiration_date` | datetime | When access expires (optional) |
+
+## Working with Resources
+
+### Fetching Resources
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+
+# List all resources
+response = client.resources.get_resources(page_size=100)
+for resource in response.results:
+    print(f"{resource.name} ({resource.resource_type})")
+
+# Get a specific resource
+resource = client.resources.get_resource(
+    resource_id="850e8400-e29b-41d4-a716-446655440000"
+)
+print(f"Resource: {resource.name}")
+print(f"Owner: {resource.admin_owner_id}")
+print(f"Max Duration: {resource.max_duration} minutes")
+```
+
+### Filtering Resources
+
+```python
+# Filter by resource type
+response = client.resources.get_resources(
+    resource_type="GITHUB_REPO",
+    page_size=50
+)
+
+# Search by name
+response = client.resources.get_resources(
+    search="production",
+    page_size=50
+)
+```
+
+### Managing Resource Access
+
+```python
+# Grant a user access to a resource
+client.resources.add_user(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000",
+    access_level_remote_id="read_only",
+    expiration_date="2026-03-11T10:00:00Z"
+)
+
+# List users with access to a resource
+resource_users = client.resources.get_resource_users(
+    resource_id="850e8400-e29b-41d4-a716-446655440000"
+)
+for user_access in resource_users.results:
+    print(f"{user_access.full_name}: {user_access.access_level.access_level_name}")
+    if user_access.expiration_date:
+        print(f"  Expires: {user_access.expiration_date}")
+
+# Remove a user's access
+client.resources.remove_user(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+### Requesting Resource Access
+
+```python
+# Request access to a resource with a specific access level
+client.resources.request_access(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000",
+    access_level_remote_id="read_only",
+    reason="Need to debug production issue #1234",
+    duration_minutes=120  # 2 hours
+)
+```
+
+## Access Control Settings
+
+Resources support comprehensive access control configurations:
+
+```python
+# Create a highly secure resource
+resource = Resource(
+    resource_id=resource_id,
+    name="customer-data-warehouse",
+    description="Customer PII data warehouse",
+    # Access duration settings
+    max_duration=240,  # 4 hours maximum
+    recommended_duration=60,  # 1 hour recommended
+    extensions_duration_in_minutes=30,  # Can extend by 30 minutes
+    # Approval requirements
+    require_manager_approval=True,
+    require_support_ticket=True,
+    # MFA requirements
+    require_mfa_to_request=True,
+    require_mfa_to_approve=True,
+    require_mfa_to_connect=True,
+    # Auto-approval disabled for sensitive data
+    auto_approval=False,
+    # Risk sensitivity
+    risk_sensitivity="HIGH"
+)
+```
+
+<Info>
+The `extensions_duration_in_minutes` field allows users to extend their access before it expires. Set to `0` to disable extensions.
+</Info>
+
+## Resource Metadata
+
+Resources linked to remote systems include metadata about the remote object:
+
+```python
+# Access remote system metadata
+if resource.metadata:
+    import json
+    remote_metadata = json.loads(resource.metadata)
+    print(f"Remote metadata: {remote_metadata}")
+
+# Check remote info
+if resource.remote_info:
+    print(f"Remote system: {resource.remote_info}")
+
+# Check last sync status
+if resource.last_successful_sync:
+    print(f"Last synced: {resource.last_successful_sync}")
+```
+
+<CardGroup cols={2}>
+  <Card title="Users and Groups" icon="users" href="/concepts/users-and-groups">
+    Learn about users, groups, and memberships
+  </Card>
+  <Card title="Access Requests" icon="paper-plane" href="/concepts/access-requests">
+    Understand the access request workflow
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+1. **Set appropriate durations**: Configure `max_duration` and `recommended_duration` based on the resource's sensitivity
+2. **Use access levels wisely**: Leverage access levels to implement least-privilege access
+3. **Enable MFA for sensitive resources**: Use `require_mfa_to_connect` for production and sensitive systems
+4. **Configure resource hierarchies**: Properly set `parent_resource_id` for nested resources
+5. **Monitor expiration dates**: Implement monitoring for resources with temporary access
+6. **Document resource metadata**: Use the `description` field to provide context for access reviewers
+
+## Related Resources
+
+- [API Reference: Resources](/api-reference/resources/list-resources)
+- [Resource Types Documentation](https://docs.opal.dev/reference/end-system-objects)
+- [Pagination Guide](/concepts/pagination)

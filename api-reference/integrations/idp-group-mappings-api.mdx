@@ -1,0 +1,235 @@
+---
+title: "IdpGroupMappingsApi"
+description: "API reference for managing IdP group mappings in Opal"
+---
+
+The `IdpGroupMappingsApi` class provides methods to manage identity provider (IdP) group mappings for Okta apps in Opal. This API allows you to create, retrieve, update, and delete mappings between Okta app groups and Opal groups.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+idp_group_mappings_api = client.idp_group_mappings
+```
+
+## Methods
+
+### create_idp_group_mapping
+
+Creates or updates an individual `IdpGroupMapping` object (upsert operation).
+
+**Behavior:**
+- If the mapping doesn't exist, it will be created with the provided values
+- If the mapping exists, only the fields provided in the request will be updated
+
+```python
+def create_idp_group_mapping(
+    app_resource_id: UUID,
+    group_id: UUID,
+    create_idp_group_mapping_request: Optional[CreateIdpGroupMappingRequest] = None
+) -> IdpGroupMapping
+```
+
+<ParamField path="app_resource_id" type="UUID" required>
+  The ID of the Okta app.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group.
+</ParamField>
+
+<ParamField body="create_idp_group_mapping_request" type="CreateIdpGroupMappingRequest">
+  The mapping configuration to create or update.
+</ParamField>
+
+**Returns:** `IdpGroupMapping` - The created or updated mapping object.
+
+**Example:**
+
+```python
+from uuid import UUID
+from opal_security.models import CreateIdpGroupMappingRequest
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+group_id = UUID("987e6543-e21b-12d3-a456-426614174999")
+
+mapping_request = CreateIdpGroupMappingRequest(
+    # Add your mapping configuration here
+)
+
+mapping = client.idp_group_mappings.create_idp_group_mapping(
+    app_resource_id=app_id,
+    group_id=group_id,
+    create_idp_group_mapping_request=mapping_request
+)
+
+print(f"Mapping created: {mapping.id}")
+```
+
+---
+
+### get_idp_group_mapping
+
+Gets an `IdpGroupMapping` object for an Okta app and group.
+
+```python
+def get_idp_group_mapping(
+    app_resource_id: UUID,
+    group_id: UUID
+) -> IdpGroupMapping
+```
+
+<ParamField path="app_resource_id" type="UUID" required>
+  The ID of the Okta app.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group.
+</ParamField>
+
+**Returns:** `IdpGroupMapping` - The requested mapping object.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+group_id = UUID("987e6543-e21b-12d3-a456-426614174999")
+
+mapping = client.idp_group_mappings.get_idp_group_mapping(
+    app_resource_id=app_id,
+    group_id=group_id
+)
+
+print(f"Mapping: {mapping}")
+```
+
+---
+
+### get_idp_group_mappings
+
+Returns the configured set of available `IdpGroupMapping` objects for an Okta app.
+
+```python
+def get_idp_group_mappings(
+    app_resource_id: UUID
+) -> IdpGroupMappingList
+```
+
+<ParamField path="app_resource_id" type="UUID" required>
+  The ID of the Okta app.
+</ParamField>
+
+**Returns:** `IdpGroupMappingList` - A list of mapping objects for the app.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+mappings = client.idp_group_mappings.get_idp_group_mappings(
+    app_resource_id=app_id
+)
+
+for mapping in mappings.results:
+    print(f"Group {mapping.group_id}: {mapping}")
+```
+
+---
+
+### update_idp_group_mappings
+
+Updates the list of available `IdpGroupMapping` objects for an Okta app.
+
+```python
+def update_idp_group_mappings(
+    app_resource_id: UUID,
+    update_idp_group_mappings_request: UpdateIdpGroupMappingsRequest
+) -> None
+```
+
+<ParamField path="app_resource_id" type="UUID" required>
+  The ID of the Okta app.
+</ParamField>
+
+<ParamField body="update_idp_group_mappings_request" type="UpdateIdpGroupMappingsRequest" required>
+  The list of mappings to update for the app.
+</ParamField>
+
+**Returns:** None
+
+**Example:**
+
+```python
+from uuid import UUID
+from opal_security.models import UpdateIdpGroupMappingsRequest
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+update_request = UpdateIdpGroupMappingsRequest(
+    # Add your update configuration here
+)
+
+client.idp_group_mappings.update_idp_group_mappings(
+    app_resource_id=app_id,
+    update_idp_group_mappings_request=update_request
+)
+
+print("Mappings updated successfully")
+```
+
+---
+
+### delete_idp_group_mappings
+
+Deletes an `IdpGroupMapping` object.
+
+```python
+def delete_idp_group_mappings(
+    app_resource_id: UUID,
+    group_id: UUID
+) -> None
+```
+
+<ParamField path="app_resource_id" type="UUID" required>
+  The ID of the Okta app.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group.
+</ParamField>
+
+**Returns:** None
+
+**Example:**
+
+```python
+from uuid import UUID
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+group_id = UUID("987e6543-e21b-12d3-a456-426614174999")
+
+client.idp_group_mappings.delete_idp_group_mappings(
+    app_resource_id=app_id,
+    group_id=group_id
+)
+
+print("Mapping deleted successfully")
+```
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object with additional HTTP metadata:
+
+- `create_idp_group_mapping_with_http_info()`
+- `get_idp_group_mapping_with_http_info()`
+- `get_idp_group_mappings_with_http_info()`
+- `update_idp_group_mappings_with_http_info()`
+- `delete_idp_group_mappings_with_http_info()`
+
+These methods return an `ApiResponse` object containing the response data, status code, and headers.

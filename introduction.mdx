@@ -1,0 +1,125 @@
+---
+title: Introduction
+description: Overview of the Opal Python SDK for managing access and permissions programmatically
+---
+
+The Opal Python SDK is a RESTful API client that allows you to interact with the Opal Security platform programmatically. Built with modern Python standards, this SDK provides a comprehensive interface for managing users, groups, resources, access requests, and more.
+
+## What is Opal?
+
+Opal is an access management platform that helps organizations automate and streamline their identity and access management workflows. The Python SDK enables developers to integrate Opal's capabilities directly into their applications and scripts.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Comprehensive API Coverage" icon="square-code">
+    Access all Opal features including users, groups, resources, requests, bundles, and more through a unified Python interface.
+  </Card>
+  <Card title="Type-Safe" icon="shield-check">
+    Built with Pydantic 2 for runtime type validation and better IDE support with full type hints.
+  </Card>
+  <Card title="Auto-Generated" icon="rotate">
+    Automatically generated from OpenAPI specifications, ensuring consistency with the Opal API.
+  </Card>
+  <Card title="Modern Python" icon="python">
+    Supports Python 3.9+ with modern async patterns and context managers.
+  </Card>
+</CardGroup>
+
+## API Capabilities
+
+The Opal Python SDK provides access to the following resources:
+
+### Identity Management
+- **Users**: Manage user accounts and their attributes
+- **Groups**: Create and manage user groups with access levels
+- **Non-Human Identities**: Handle service accounts and automation identities
+
+### Access Control
+- **Resources**: Manage resources across cloud providers (AWS, GCP, Azure) and SaaS applications
+- **Bundles**: Group resources together for easier access management
+- **Access Rules**: Define automated access policies
+- **Requests**: Handle access request workflows and approvals
+
+### Audit & Compliance
+- **Events**: Track access events and changes
+- **Sessions**: Monitor active user sessions
+- **User Access Reviews (UARs)**: Conduct periodic access reviews
+
+### Configuration
+- **Message Channels**: Integrate with Slack and other messaging platforms
+- **On-Call Schedules**: Connect with PagerDuty, Rootly, and other services
+- **Configuration Templates**: Manage reusable configuration templates
+- **Tags**: Organize resources with custom tags
+
+## SDK Architecture
+
+The SDK is organized into several key components:
+
+```python
+import opal_security as opal
+
+# Configuration - API settings and authentication
+configuration = opal.Configuration()
+
+# ApiClient - HTTP client for API communication
+api_client = opal.ApiClient(configuration)
+
+# API Classes - Specialized clients for each resource type
+groups_api = opal.GroupsApi(api_client)
+resources_api = opal.ResourcesApi(api_client)
+requests_api = opal.RequestsApi(api_client)
+
+# Models - Pydantic data models for request/response validation
+group = opal.CreateGroupInfo(name="Engineering", description="Engineering team")
+```
+
+## Requirements
+
+- **Python**: 3.9 or higher
+- **Dependencies**:
+  - `urllib3 >= 2.1.0, < 3.0.0`
+  - `python-dateutil >= 2.8.2`
+  - `pydantic >= 2`
+  - `typing-extensions >= 4.7.1`
+
+## Version Information
+
+- **API Version**: 1.0
+- **SDK Version**: 1.0.0
+- **OpenAPI Generator Version**: 7.19.0
+
+<Note>
+  This SDK is automatically generated using OpenAPI Generator. The source OpenAPI specification ensures that the SDK stays in sync with the Opal API.
+</Note>
+
+## Support Resources
+
+<CardGroup cols={2}>
+  <Card title="API Documentation" icon="book" href="https://docs.opal.dev/api-reference">
+    Complete REST API reference
+  </Card>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/opalsecurity/opal-python">
+    View source code and releases
+  </Card>
+  <Card title="PyPI Package" icon="box" href="https://pypi.org/project/opal-security/">
+    Install from Python Package Index
+  </Card>
+  <Card title="Opal Website" icon="globe" href="https://www.opal.dev/">
+    Learn more about Opal Security
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<Steps>
+  <Step title="Install the SDK">
+    Follow the [Quickstart guide](/quickstart) to install and set up the SDK.
+  </Step>
+  <Step title="Configure Authentication">
+    Learn how to [authenticate](/authentication) with the Opal API.
+  </Step>
+  <Step title="Explore Configuration Options">
+    Discover [configuration options](/configuration) to customize the SDK behavior.
+  </Step>
+</Steps>

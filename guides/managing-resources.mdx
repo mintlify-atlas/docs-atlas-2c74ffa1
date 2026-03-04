@@ -1,0 +1,438 @@
+---
+title: "Managing Resources"
+description: "Learn how to manage resources and access control with the Opal Python SDK"
+---
+
+Resources represent the systems, applications, and data that users need access to. This guide covers creating resources, managing user access, and working with resource metadata.
+
+## Overview
+
+The `ResourcesApi` class provides methods to:
+- Create and manage resources
+- Grant and revoke user access
+- Manage non-human identity (NHI) access
+- Configure resource settings and metadata
+- Track access levels and permissions
+
+## Creating Resources
+
+<Steps>
+  <Step title="Create a basic resource">
+    Use the `create_resource()` method to create a new resource:
+
+    ```python
+    from opal_security import Opal
+    from opal_security.models import CreateResourceInfo, ResourceTypeEnum
+
+    client = Opal(
+        api_key="YOUR_API_KEY"
+    )
+
+    # Create a new resource
+    resource_info = CreateResourceInfo(
+        name="Production Database",
+        description="Main production PostgreSQL database",
+        resource_type=ResourceTypeEnum.CUSTOM
+    )
+
+    resource = client.resources.create_resource(
+        create_resource_info=resource_info
+    )
+
+    print(f"Created resource: {resource.name}")
+    print(f"Resource ID: {resource.resource_id}")
+    ```
+  </Step>
+
+  <Step title="Import a remote resource">
+    You can import resources from external systems:
+
+    ```python
+    # Import a remote resource (e.g., from AWS, Okta, etc.)
+    resource_info = CreateResourceInfo(
+        name="AWS Production Account",
+        description="AWS production environment",
+        admin_owner_id="owner-uuid",
+        remote_info={
+            "app_id": "aws-app-id",
+            "remote_id": "aws-account-123456"
+        }
+    )
+
+    resource = client.resources.create_resource(
+        create_resource_info=resource_info
+    )
+    ```
+
+    <Tip>
+    See the [Opal documentation](https://docs.opal.dev/reference/end-system-objects) for details about importing resources from different providers.
+    </Tip>
+  </Step>
+</Steps>
+
+## Managing User Access
+
+### Granting Access to Users
+
+Add users to resources with the `add_resource_user()` method:
+
+```python
+from uuid import UUID
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+user_id = UUID("987fcdeb-51a2-43f1-b234-567890abcdef")
+
+# Grant indefinite access
+resource_user = client.resources.add_resource_user(
+    resource_id=resource_id,
+    user_id=user_id,
+    duration_minutes=0  # 0 means indefinite
+)
+
+print(f"Granted access to user: {resource_user.user_id}")
+```
+
+<CodeGroup>
+
+```python Temporary Access
+# Grant access for 24 hours
+resource_user = client.resources.add_resource_user(
+    resource_id=resource_id,
+    user_id=user_id,
+    duration_minutes=1440  # 24 hours
+)
+
+print(f"Access expires at: {resource_user.expires_at}")
+```
+
+```python Custom Access Level
+# Grant specific access level
+resource_user = client.resources.add_resource_user(
+    resource_id=resource_id,
+    user_id=user_id,
+    access_level_remote_id="read-only"
+)
+```
+
+```python With Request Body
+from opal_security.models import AddResourceUserRequest
+
+# Grant access with additional parameters
+add_request = AddResourceUserRequest(
+    # Additional request parameters
+)
+
+resource_user = client.resources.add_resource_user(
+    resource_id=resource_id,
+    user_id=user_id,
+    duration_minutes=10080,  # 7 days
+    access_level_remote_id="admin",
+    add_resource_user_request=add_request
+)
+```
+
+</CodeGroup>
+
+<Note>
+The maximum duration for temporary access is 525,960 minutes (approximately 1 year).
+</Note>
+
+### Listing Resource Users
+
+Retrieve all users who have access to a resource:
+
+```python
+# Get all users with access
+resource_users = client.resources.get_resource_users(
+    resource_id=resource_id,
+    page_size=100
+)
+
+for user in resource_users.results:
+    print(f"User: {user.user_id}")
+    print(f"Access Level: {user.access_level_remote_id}")
+    if user.expires_at:
+        print(f"Expires: {user.expires_at}")
+```
+
+Filter by access status:
+
+```python
+from opal_security.models import ResourceUserAccessStatus
+
+# Get only active users
+active_users = client.resources.get_resource_users(
+    resource_id=resource_id,
+    access_status=ResourceUserAccessStatus.ACTIVE
+)
+```
+
+### Revoking Access
+
+Remove a user's access to a resource:
+
+```python
+# Remove user access
+client.resources.delete_resource_user(
+    resource_id=resource_id,
+    user_id=user_id
+)
+
+print(f"Revoked access for user {user_id}")
+```
+
+## Managing Non-Human Identity Access
+
+Grant access to service accounts, API keys, and other non-human identities:
+
+```python
+from opal_security.models import AddResourceNhiRequest
+
+nhi_id = UUID("service-account-uuid")
+
+# Add non-human identity to resource
+resource_nhi = client.resources.add_resource_nhi(
+    resource_id=resource_id,
+    non_human_identity_id=nhi_id,
+    add_resource_nhi_request=AddResourceNhiRequest()
+)
+
+print(f"Granted access to NHI: {resource_nhi.non_human_identity_id}")
+```
+
+Revoke NHI access:
+
+```python
+# Remove NHI access
+client.resources.delete_resource_nhi(
+    resource_id=resource_id,
+    non_human_identity_id=nhi_id
+)
+```
+
+## Retrieving Resources
+
+<Steps>
+  <Step title="Get a specific resource">
+    ```python
+    # Get resource by ID
+    resource = client.resources.get_resource(
+        resource_id=resource_id
+    )
+
+    print(f"Resource: {resource.name}")
+    print(f"Type: {resource.resource_type}")
+    print(f"Description: {resource.description}")
+    ```
+  </Step>
+
+  <Step title="List all resources">
+    ```python
+    # Get paginated list of resources
+    resources_list = client.resources.get_resources(
+        page_size=50
+    )
+
+    for resource in resources_list.results:
+        print(f"{resource.name} - {resource.resource_id}")
+
+    # Handle pagination
+    if resources_list.next:
+        next_page = client.resources.get_resources(
+            cursor=resources_list.next
+        )
+    ```
+  </Step>
+
+  <Step title="Filter resources">
+    ```python
+    from opal_security.models import ResourceTypeEnum
+
+    # Filter by resource type
+    databases = client.resources.get_resources(
+        resource_type=[ResourceTypeEnum.DATABASE]
+    )
+
+    # Filter by app ID
+    aws_resources = client.resources.get_resources(
+        app_id=[UUID("aws-app-uuid")]
+    )
+    ```
+  </Step>
+</Steps>
+
+## Updating Resources
+
+Update resource properties:
+
+```python
+from opal_security.models import UpdateResourceInfoList
+
+# Update resource information
+update_info = UpdateResourceInfoList(
+    name="Updated Resource Name",
+    description="Updated description"
+)
+
+updated_resource = client.resources.update_resources(
+    resource_id=resource_id,
+    update_resource_info_list=update_info
+)
+```
+
+## Deleting Resources
+
+```python
+# Delete a resource
+client.resources.delete_resource(
+    resource_id=resource_id
+)
+
+print(f"Deleted resource {resource_id}")
+```
+
+<Warning>
+Deleting a resource immediately revokes all user and group access. This action cannot be undone.
+</Warning>
+
+## Managing Resource Tags
+
+Tags help organize and categorize resources:
+
+```python
+# Get tags for a resource
+tags = client.resources.get_resource_tags(
+    resource_id=resource_id
+)
+
+for tag in tags.results:
+    print(f"{tag.key}: {tag.value}")
+```
+
+## Access Level Management
+
+Resources can have multiple access levels (e.g., read-only, read-write, admin):
+
+```python
+# Get available access levels for a resource
+access_levels = client.resources.get_resource_access_levels(
+    resource_id=resource_id
+)
+
+for level in access_levels.results:
+    print(f"Access Level: {level.remote_id}")
+    print(f"Name: {level.name}")
+```
+
+## Complete Example: Resource Setup
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateResourceInfo, ResourceTypeEnum
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+def setup_database_resource(client, name, admin_users, read_only_users):
+    """
+    Create a database resource and grant access to users.
+    """
+    # Create the resource
+    resource_info = CreateResourceInfo(
+        name=name,
+        description=f"{name} database",
+        resource_type=ResourceTypeEnum.DATABASE
+    )
+    resource = client.resources.create_resource(
+        create_resource_info=resource_info
+    )
+    print(f"Created resource: {resource.resource_id}")
+
+    # Grant admin access
+    for user_id in admin_users:
+        try:
+            client.resources.add_resource_user(
+                resource_id=resource.resource_id,
+                user_id=UUID(user_id),
+                access_level_remote_id="admin",
+                duration_minutes=0
+            )
+            print(f"Granted admin access to {user_id}")
+        except Exception as e:
+            print(f"Failed to grant admin access to {user_id}: {e}")
+
+    # Grant read-only access
+    for user_id in read_only_users:
+        try:
+            client.resources.add_resource_user(
+                resource_id=resource.resource_id,
+                user_id=UUID(user_id),
+                access_level_remote_id="read-only",
+                duration_minutes=0
+            )
+            print(f"Granted read-only access to {user_id}")
+        except Exception as e:
+            print(f"Failed to grant read-only access to {user_id}: {e}")
+
+    return resource
+
+# Usage
+db = setup_database_resource(
+    client,
+    "Production PostgreSQL",
+    admin_users=["admin-user-1-uuid", "admin-user-2-uuid"],
+    read_only_users=["dev-user-1-uuid", "dev-user-2-uuid"]
+)
+```
+
+## Audit and Reporting
+
+### Generate Access Report
+
+```python
+def generate_resource_access_report(client, resource_id):
+    """
+    Generate a report of all users with access to a resource.
+    """
+    resource = client.resources.get_resource(resource_id=resource_id)
+    users = client.resources.get_resource_users(
+        resource_id=resource_id,
+        page_size=1000
+    )
+
+    print(f"Access Report for: {resource.name}")
+    print(f"Resource ID: {resource.resource_id}")
+    print(f"Total Users: {len(users.results)}\n")
+
+    for user in users.results:
+        print(f"User: {user.user_id}")
+        print(f"  Access Level: {user.access_level_remote_id}")
+        print(f"  Status: {user.access_status}")
+        if user.expires_at:
+            print(f"  Expires: {user.expires_at}")
+        print()
+
+# Usage
+generate_resource_access_report(client, resource_id)
+```
+
+## Best Practices
+
+1. **Use descriptive names**: Give resources clear names that identify what they are and their purpose.
+
+2. **Set appropriate access levels**: Always use the principle of least privilege when granting access.
+
+3. **Leverage temporary access**: Use duration-based access for contractors, temporary team members, or time-limited projects.
+
+4. **Regular audits**: Periodically review resource access to ensure it remains appropriate.
+
+5. **Tag resources**: Use tags to organize resources by environment, team, or sensitivity level.
+
+6. **Document access levels**: Clearly define what each access level means for your resources.
+
+## Related Resources
+
+- [Managing Users](/guides/managing-users)
+- [Managing Groups](/guides/managing-groups)
+- [Access Requests](/guides/access-requests)
+- [API Reference: ResourcesApi](/api-reference/resources/create-resource)

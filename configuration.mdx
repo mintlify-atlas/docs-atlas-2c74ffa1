@@ -1,0 +1,590 @@
+---
+title: Configuration
+description: Configure the Opal Python SDK with custom settings for your environment
+---
+
+The Opal Python SDK provides extensive configuration options to customize its behavior for your specific needs. This guide covers all available settings and best practices.
+
+## Configuration Class
+
+The `Configuration` class is the central place for all SDK settings. It controls API endpoints, authentication, networking, logging, and more.
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    host="https://api.opal.dev/v1",
+    access_token="your-token-here"
+)
+```
+
+## Core Configuration Options
+
+### API Endpoint Configuration
+
+<ParamField path="host" type="str" default="https://api.opal.dev/v1">
+  Base URL for the Opal API. Override this for custom deployments or testing.
+  
+  ```python
+  # Production (default)
+  configuration = opal.Configuration(
+      host="https://api.opal.dev/v1"
+  )
+  
+  # Custom deployment
+  configuration = opal.Configuration(
+      host="https://api.opal.example.com/v1"
+  )
+  
+  # Local development
+  configuration = opal.Configuration(
+      host="http://localhost:8080/v1"
+  )
+  ```
+</ParamField>
+
+<ParamField path="server_index" type="int" default="0">
+  Index to select from available server configurations. Useful when the API provides multiple environment URLs.
+  
+  ```python
+  configuration = opal.Configuration(
+      server_index=0  # Use the first server in the list
+  )
+  ```
+</ParamField>
+
+<ParamField path="ignore_operation_servers" type="bool" default="False">
+  If True, always use the `host` configuration instead of operation-specific server URLs.
+  
+  ```python
+  configuration = opal.Configuration(
+      host="https://api.opal.dev/v1",
+      ignore_operation_servers=True  # Always use this host
+  )
+  ```
+</ParamField>
+
+### Authentication Configuration
+
+See the [Authentication](/authentication) guide for detailed information.
+
+<ParamField path="access_token" type="str">
+  Bearer token for API authentication (recommended).
+  
+  ```python
+  import os
+  
+  configuration = opal.Configuration(
+      access_token=os.environ["OPAL_API_TOKEN"]
+  )
+  ```
+</ParamField>
+
+<ParamField path="api_key" type="Dict[str, str]">
+  Dictionary to store API keys for different security schemes.
+  
+  ```python
+  configuration = opal.Configuration(
+      api_key={
+          "ApiKeyAuth": "your-api-key"
+      }
+  )
+  ```
+</ParamField>
+
+<ParamField path="api_key_prefix" type="Dict[str, str]">
+  Dictionary to store prefixes for API keys (e.g., "Bearer", "Token").
+  
+  ```python
+  configuration = opal.Configuration(
+      api_key={"Authorization": "token123"},
+      api_key_prefix={"Authorization": "Bearer"}
+  )
+  ```
+</ParamField>
+
+### SSL/TLS Configuration
+
+<ParamField path="verify_ssl" type="bool" default="True">
+  Enable or disable SSL certificate verification. **Only disable for testing!**
+  
+  ```python
+  # Production: Always verify SSL (default)
+  configuration = opal.Configuration(
+      verify_ssl=True
+  )
+  
+  # Testing only: Disable SSL verification
+  configuration = opal.Configuration(
+      verify_ssl=False
+  )
+  ```
+  
+  <Warning>
+    Disabling SSL verification in production environments is a serious security risk. Only use this for local testing with self-signed certificates.
+  </Warning>
+</ParamField>
+
+<ParamField path="ssl_ca_cert" type="str">
+  Path to a custom CA certificate bundle in PEM format.
+  
+  ```python
+  configuration = opal.Configuration(
+      ssl_ca_cert="/path/to/ca-bundle.pem"
+  )
+  ```
+</ParamField>
+
+<ParamField path="ca_cert_data" type="Union[str, bytes]">
+  Certificate data in PEM (str) or DER (bytes) format for peer verification.
+  
+  ```python
+  # PEM format
+  cert_pem = """-----BEGIN CERTIFICATE-----
+  ...
+  -----END CERTIFICATE-----"""
+  
+  configuration = opal.Configuration(
+      ca_cert_data=cert_pem
+  )
+  ```
+</ParamField>
+
+<ParamField path="cert_file" type="str">
+  Path to client certificate file for mutual TLS (mTLS).
+  
+  ```python
+  configuration = opal.Configuration(
+      cert_file="/path/to/client-cert.pem",
+      key_file="/path/to/client-key.pem"
+  )
+  ```
+</ParamField>
+
+<ParamField path="key_file" type="str">
+  Path to client private key file for mutual TLS (mTLS).
+</ParamField>
+
+<ParamField path="assert_hostname" type="Optional[bool]">
+  Enable or disable SSL hostname verification.
+  
+  ```python
+  configuration = opal.Configuration(
+      assert_hostname=False  # Disable hostname verification
+  )
+  ```
+</ParamField>
+
+<ParamField path="tls_server_name" type="str">
+  Server Name Indication (SNI) value for SSL/TLS connections.
+  
+  ```python
+  configuration = opal.Configuration(
+      tls_server_name="api.opal.dev"
+  )
+  ```
+</ParamField>
+
+### Network Configuration
+
+<ParamField path="connection_pool_maxsize" type="int" default="cpu_count * 5">
+  Maximum number of connections to keep in the connection pool. Higher values improve performance for concurrent requests.
+  
+  ```python
+  import multiprocessing
+  
+  configuration = opal.Configuration(
+      connection_pool_maxsize=multiprocessing.cpu_count() * 10
+  )
+  ```
+</ParamField>
+
+<ParamField path="retries" type="int">
+  Number of retry attempts for failed requests.
+  
+  ```python
+  configuration = opal.Configuration(
+      retries=3  # Retry failed requests up to 3 times
+  )
+  ```
+</ParamField>
+
+<ParamField path="proxy" type="str">
+  HTTP/HTTPS proxy URL.
+  
+  ```python
+  configuration = opal.Configuration(
+      proxy="http://proxy.example.com:8080"
+  )
+  ```
+</ParamField>
+
+<ParamField path="proxy_headers" type="Dict[str, str]">
+  Additional headers to send with proxy requests.
+  
+  ```python
+  configuration = opal.Configuration(
+      proxy="http://proxy.example.com:8080",
+      proxy_headers={
+          "Proxy-Authorization": "Basic dXNlcjpwYXNz"
+      }
+  )
+  ```
+</ParamField>
+
+<ParamField path="socket_options" type="List[Tuple]">
+  Options to pass to the underlying urllib3 socket.
+  
+  ```python
+  import socket
+  
+  configuration = opal.Configuration(
+      socket_options=[
+          (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1),
+          (socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)
+      ]
+  )
+  ```
+</ParamField>
+
+### Logging Configuration
+
+<ParamField path="debug" type="bool" default="False">
+  Enable debug logging for detailed request/response information.
+  
+  ```python
+  configuration = opal.Configuration(
+      debug=True  # Enable debug logging
+  )
+  ```
+</ParamField>
+
+<ParamField path="logger_file" type="str">
+  Path to a file for logging output. If not set, logs go to console.
+  
+  ```python
+  configuration = opal.Configuration(
+      debug=True,
+      logger_file="/var/log/opal-sdk.log"
+  )
+  ```
+</ParamField>
+
+<ParamField path="logger_format" type="str" default="%(asctime)s %(levelname)s %(message)s">
+  Format string for log messages.
+  
+  ```python
+  configuration = opal.Configuration(
+      debug=True,
+      logger_format="%(asctime)s [%(name)s] %(levelname)s: %(message)s"
+  )
+  ```
+</ParamField>
+
+### Validation Configuration
+
+<ParamField path="client_side_validation" type="bool" default="True">
+  Enable client-side validation of request parameters before sending to the API.
+  
+  ```python
+  configuration = opal.Configuration(
+      client_side_validation=True  # Validate parameters locally
+  )
+  ```
+</ParamField>
+
+### Date/Time Configuration
+
+<ParamField path="datetime_format" type="str" default="%Y-%m-%dT%H:%M:%S.%f%z">
+  Format string for datetime serialization.
+  
+  ```python
+  configuration = opal.Configuration(
+      datetime_format="%Y-%m-%dT%H:%M:%S%z"
+  )
+  ```
+</ParamField>
+
+<ParamField path="date_format" type="str" default="%Y-%m-%d">
+  Format string for date serialization.
+  
+  ```python
+  configuration = opal.Configuration(
+      date_format="%Y/%m/%d"
+  )
+  ```
+</ParamField>
+
+## Complete Configuration Example
+
+Here's a comprehensive example showing multiple configuration options:
+
+```python
+import os
+import multiprocessing
+import opal_security as opal
+
+configuration = opal.Configuration(
+    # API endpoint
+    host="https://api.opal.dev/v1",
+    
+    # Authentication
+    access_token=os.environ["OPAL_API_TOKEN"],
+    
+    # SSL/TLS
+    verify_ssl=True,
+    ssl_ca_cert="/etc/ssl/certs/ca-bundle.pem",
+    
+    # Network settings
+    connection_pool_maxsize=multiprocessing.cpu_count() * 5,
+    retries=3,
+    
+    # Logging
+    debug=False,
+    logger_format="%(asctime)s [%(levelname)s] %(message)s",
+    
+    # Validation
+    client_side_validation=True
+)
+
+with opal.ApiClient(configuration) as api_client:
+    # Use the configured client
+    groups_api = opal.GroupsApi(api_client)
+    groups = groups_api.get_groups()
+```
+
+## Environment-Specific Configurations
+
+### Development Configuration
+
+```python dev_config.py
+import os
+import opal_security as opal
+
+def get_dev_config():
+    return opal.Configuration(
+        host="http://localhost:8080/v1",
+        access_token=os.environ["OPAL_DEV_TOKEN"],
+        debug=True,
+        verify_ssl=False,  # Only for local dev!
+        logger_file="logs/opal-dev.log"
+    )
+```
+
+### Production Configuration
+
+```python prod_config.py
+import os
+import opal_security as opal
+
+def get_prod_config():
+    return opal.Configuration(
+        host="https://api.opal.dev/v1",
+        access_token=os.environ["OPAL_API_TOKEN"],
+        verify_ssl=True,
+        retries=3,
+        connection_pool_maxsize=50,
+        debug=False
+    )
+```
+
+### Using Configuration Factories
+
+```python config.py
+import os
+import opal_security as opal
+
+def get_config(environment: str = None) -> opal.Configuration:
+    """Get configuration based on environment."""
+    env = environment or os.environ.get("ENV", "development")
+    
+    base_config = {
+        "access_token": os.environ["OPAL_API_TOKEN"],
+        "verify_ssl": True,
+        "retries": 3
+    }
+    
+    if env == "production":
+        base_config.update({
+            "host": "https://api.opal.dev/v1",
+            "debug": False,
+            "connection_pool_maxsize": 50
+        })
+    elif env == "staging":
+        base_config.update({
+            "host": "https://staging-api.opal.dev/v1",
+            "debug": True,
+            "logger_file": "logs/staging.log"
+        })
+    else:  # development
+        base_config.update({
+            "host": "http://localhost:8080/v1",
+            "debug": True,
+            "verify_ssl": False
+        })
+    
+    return opal.Configuration(**base_config)
+
+# Usage
+configuration = get_config()
+```
+
+## Default Configuration
+
+You can set a default configuration for all API clients:
+
+```python
+import opal_security as opal
+
+# Set global default configuration
+default_config = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+opal.Configuration.set_default(default_config)
+
+# Now all API clients will use this configuration by default
+api_client = opal.ApiClient()  # Uses default configuration
+groups_api = opal.GroupsApi()  # Also uses default configuration
+```
+
+## Configuration with Proxy
+
+For environments that require HTTP proxies:
+
+```python
+import os
+import opal_security as opal
+
+configuration = opal.Configuration(
+    host="https://api.opal.dev/v1",
+    access_token=os.environ["OPAL_API_TOKEN"],
+    proxy="http://proxy.corp.example.com:8080",
+    proxy_headers={
+        "Proxy-Authorization": os.environ["PROXY_AUTH"]
+    }
+)
+```
+
+## Debug Mode
+
+Enable comprehensive debugging for troubleshooting:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"],
+    debug=True,  # Enable debug mode
+    logger_file="debug.log"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    # Debug output will show:
+    # - Request URLs and headers
+    # - Request body
+    # - Response status and headers
+    # - Response body
+    groups_api = opal.GroupsApi(api_client)
+    groups = groups_api.get_groups()
+```
+
+Debug output example:
+```
+2024-03-04 10:15:23 DEBUG Starting new HTTPS connection (1): api.opal.dev:443
+2024-03-04 10:15:23 DEBUG https://api.opal.dev:443 "GET /v1/groups HTTP/1.1" 200 None
+2024-03-04 10:15:23 DEBUG Response body: {"results": [...], "next": null}
+```
+
+## Configuration Utility Methods
+
+### Get Debug Report
+
+```python
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+print(configuration.to_debug_report())
+# Output:
+# Python SDK Debug Report:
+# OS: linux
+# Python Version: 3.11.0
+# Version of the API: 1.0
+# SDK Package Version: 1.0.0
+```
+
+### Get Host Settings
+
+```python
+configuration = opal.Configuration()
+
+hosts = configuration.get_host_settings()
+print(hosts)
+# Output: [{'url': 'https://api.opal.dev/v1', 'description': 'Production'}]
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment-Specific Configurations">
+    Create separate configuration objects for different environments:
+    
+    ```python
+    config = get_config(os.environ.get("ENV", "development"))
+    ```
+  </Accordion>
+  
+  <Accordion title="Enable Connection Pooling">
+    For high-traffic applications, increase the connection pool size:
+    
+    ```python
+    configuration = opal.Configuration(
+        connection_pool_maxsize=100  # Adjust based on your needs
+    )
+    ```
+  </Accordion>
+  
+  <Accordion title="Implement Retry Logic">
+    Configure retries for transient failures:
+    
+    ```python
+    configuration = opal.Configuration(
+        retries=3  # Retry up to 3 times
+    )
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Debug Mode Sparingly">
+    Only enable debug mode during development or troubleshooting:
+    
+    ```python
+    configuration = opal.Configuration(
+        debug=os.environ.get("DEBUG", "false").lower() == "true"
+    )
+    ```
+  </Accordion>
+  
+  <Accordion title="Secure Proxy Credentials">
+    Store proxy credentials in environment variables, not in code:
+    
+    ```python
+    configuration = opal.Configuration(
+        proxy=os.environ["HTTP_PROXY"],
+        proxy_headers={
+            "Proxy-Authorization": os.environ["PROXY_AUTH"]
+        }
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference/introduction">
+    Explore all available API endpoints and methods
+  </Card>
+  <Card title="Examples" icon="code" href="https://github.com/opalsecurity/opal-python/tree/main/examples">
+    View complete code examples on GitHub
+  </Card>
+</CardGroup>

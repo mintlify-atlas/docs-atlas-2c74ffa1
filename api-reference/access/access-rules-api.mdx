@@ -1,0 +1,228 @@
+---
+title: "AccessRulesApi"
+description: "API reference for managing access rules in the Opal Python SDK"
+---
+
+## Overview
+
+The `AccessRulesApi` class provides methods for managing access rule configurations in Opal. Access rules define automated access policies for groups.
+
+## Initialization
+
+```python
+from opal_security import ApiClient
+from opal_security.api import AccessRulesApi
+
+# Initialize with default client
+api = AccessRulesApi()
+
+# Or with custom client
+client = ApiClient()
+api = AccessRulesApi(api_client=client)
+```
+
+## Methods
+
+### create_access_rule
+
+Create a new access rule configuration for a group.
+
+```python
+def create_access_rule(
+    update_access_rule_info: UpdateAccessRuleInfo,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> AccessRule
+```
+
+<ParamField path="update_access_rule_info" type="UpdateAccessRuleInfo" required>
+  Configuration for the new access rule, including group ID and rule settings
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `AccessRule` - The newly created access rule
+
+**HTTP Method:** `POST /access-rules`
+
+**Example:**
+```python
+from opal_security.models import UpdateAccessRuleInfo
+
+rule_info = UpdateAccessRuleInfo(
+    # Configure access rule settings
+)
+
+access_rule = api.create_access_rule(
+    update_access_rule_info=rule_info
+)
+print(f"Access rule created with ID: {access_rule.id}")
+```
+
+---
+
+### get_access_rule
+
+Retrieve an access rule configuration by its access rule ID (group ID).
+
+```python
+def get_access_rule(
+    access_rule_id: UUID,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> AccessRule
+```
+
+<ParamField path="access_rule_id" type="UUID" required>
+  The access rule ID (group ID) of the access rule to retrieve
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `AccessRule` - The access rule configuration
+
+**HTTP Method:** `GET /access-rules/{access_rule_id}`
+
+**Example:**
+```python
+from uuid import UUID
+
+access_rule_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+access_rule = api.get_access_rule(access_rule_id=access_rule_id)
+
+print(f"Access rule for group: {access_rule.group_id}")
+print(f"Rule configuration: {access_rule}")
+```
+
+---
+
+### update_access_rule
+
+Update an existing access rule configuration.
+
+```python
+def update_access_rule(
+    access_rule_id: UUID,
+    update_access_rule_info: UpdateAccessRuleInfo,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> AccessRule
+```
+
+<ParamField path="access_rule_id" type="UUID" required>
+  The access rule ID (group ID) of the access rule to update
+</ParamField>
+
+<ParamField path="update_access_rule_info" type="UpdateAccessRuleInfo" required>
+  Updated configuration for the access rule
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `AccessRule` - The updated access rule
+
+**HTTP Method:** `PUT /access-rules/{access_rule_id}`
+
+**Example:**
+```python
+from uuid import UUID
+from opal_security.models import UpdateAccessRuleInfo
+
+access_rule_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+updated_info = UpdateAccessRuleInfo(
+    # Configure updated settings
+)
+
+access_rule = api.update_access_rule(
+    access_rule_id=access_rule_id,
+    update_access_rule_info=updated_info
+)
+print("Access rule updated successfully")
+```
+
+---
+
+## Complete Example
+
+Here's a complete example showing how to create, retrieve, and update access rules:
+
+```python
+from opal_security import ApiClient
+from opal_security.api import AccessRulesApi
+from opal_security.models import UpdateAccessRuleInfo
+from uuid import UUID
+
+# Initialize the API
+api = AccessRulesApi()
+
+# Create a new access rule
+rule_info = UpdateAccessRuleInfo(
+    # Configure your access rule
+)
+
+new_rule = api.create_access_rule(update_access_rule_info=rule_info)
+print(f"Created access rule: {new_rule.id}")
+
+# Retrieve the access rule
+retrieved_rule = api.get_access_rule(access_rule_id=new_rule.id)
+print(f"Retrieved rule: {retrieved_rule}")
+
+# Update the access rule
+updated_info = UpdateAccessRuleInfo(
+    # Configure updated settings
+)
+
+updated_rule = api.update_access_rule(
+    access_rule_id=new_rule.id,
+    update_access_rule_info=updated_info
+)
+print("Access rule updated")
+```
+
+## HTTP Info Variants
+
+All methods have `_with_http_info` variants that return an `ApiResponse` object containing the response data along with HTTP headers and status code:
+
+```python
+response = api.get_access_rule_with_http_info(
+    access_rule_id=access_rule_id
+)
+print(f"Status: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+## Without Preload Content
+
+You can also use `_without_preload_content` variants to get the raw HTTP response without deserializing the response body:
+
+```python
+raw_response = api.get_access_rule_without_preload_content(
+    access_rule_id=access_rule_id
+)
+# Returns RESTResponseType
+```
+
+## Error Handling
+
+```python
+from opal_security.exceptions import ApiException
+
+try:
+    access_rule = api.get_access_rule(access_rule_id=rule_id)
+except ApiException as e:
+    print(f"API error: {e.status} - {e.reason}")
+    print(f"Response body: {e.body}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+```
+
+## Related Resources
+
+- [Access Rules Overview](/concepts/access-rules)
+- [Group Management](/api-reference/groups/groups-api)
+- [Request Management](/api-reference/access/requests-api)

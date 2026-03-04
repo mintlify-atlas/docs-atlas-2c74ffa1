@@ -1,0 +1,266 @@
+---
+title: "Managing Users"
+description: "Learn how to manage users in Opal using the Python SDK"
+---
+
+The Opal Python SDK provides comprehensive methods for managing users in your organization. This guide covers retrieving user information, managing user tags, and filtering remote users.
+
+## Overview
+
+The `UsersApi` class provides methods to:
+- Retrieve users by ID or email
+- List all users with pagination
+- Get remote users with filtering
+- Manage user tags
+
+## Retrieving Users
+
+<Steps>
+  <Step title="Get a specific user by ID or email">
+    Use the `user()` method to retrieve a user by their ID or email address:
+
+    ```python
+    from opal_security import Opal
+    from uuid import UUID
+
+    client = Opal(
+        api_key="YOUR_API_KEY"
+    )
+
+    # Get user by ID
+    user = client.users.user(
+        user_id=UUID("123e4567-e89b-12d3-a456-426614174000")
+    )
+
+    print(f"User: {user.name}")
+    print(f"Email: {user.email}")
+    ```
+
+    You can also retrieve a user by email:
+
+    ```python
+    # Get user by email
+    user = client.users.user(
+        email="[email protected]"
+    )
+    ```
+
+    <Tip>
+    If both `user_id` and `email` are provided, `user_id` takes precedence.
+    </Tip>
+  </Step>
+
+  <Step title="List all users">
+    Use the `get_users()` method to retrieve a paginated list of all users:
+
+    ```python
+    # Get first page of users
+    users_list = client.users.get_users(page_size=50)
+
+    for user in users_list.results:
+        print(f"{user.name} - {user.email}")
+
+    # Handle pagination
+    if users_list.next:
+        next_page = client.users.get_users(
+            cursor=users_list.next,
+            page_size=50
+        )
+    ```
+
+    <Note>
+    The default page size is 200. The maximum page size is 1000.
+    </Note>
+  </Step>
+
+  <Step title="Iterate through all users">
+    Here's a complete example of iterating through all users:
+
+    ```python
+    def get_all_users(client):
+        """Retrieve all users using pagination."""
+        all_users = []
+        cursor = None
+
+        while True:
+            users_list = client.users.get_users(
+                cursor=cursor,
+                page_size=200
+            )
+
+            all_users.extend(users_list.results)
+
+            # Check if there are more pages
+            if not users_list.next:
+                break
+
+            cursor = users_list.next
+
+        return all_users
+
+    # Usage
+    all_users = get_all_users(client)
+    print(f"Total users: {len(all_users)}")
+    ```
+  </Step>
+</Steps>
+
+## Working with Remote Users
+
+Remote users are users from third-party identity providers. You can retrieve and filter them using the `get_remote_users()` method.
+
+```python
+from opal_security.models import ThirdPartyProviderEnum
+
+# Get remote users from a specific provider
+remote_users = client.users.get_remote_users(
+    third_party_provider=[ThirdPartyProviderEnum.OKTA],
+    page_size=100
+)
+
+for user in remote_users.results:
+    print(f"Remote User: {user.remote_id}")
+
+# Filter by user ID
+remote_users = client.users.get_remote_users(
+    user_id=[UUID("123e4567-e89b-12d3-a456-426614174000")]
+)
+
+# Filter by remote ID
+remote_users = client.users.get_remote_users(
+    remote_id=["okta_user_123"]
+)
+```
+
+## Managing User Tags
+
+Tags help organize and categorize users. Use the `get_user_tags()` method to retrieve all tags applied to a user.
+
+```python
+# Get tags for a specific user
+user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+tags = client.users.get_user_tags(user_id=user_id)
+
+print(f"User has {len(tags.results)} tags:")
+for tag in tags.results:
+    print(f"- {tag.key}: {tag.value}")
+```
+
+<CodeGroup>
+
+```python Find users by tag
+def find_users_with_tag(client, tag_key, tag_value):
+    """Find all users with a specific tag."""
+    matching_users = []
+    cursor = None
+
+    while True:
+        users_list = client.users.get_users(cursor=cursor)
+
+        for user in users_list.results:
+            tags = client.users.get_user_tags(user_id=user.user_id)
+            for tag in tags.results:
+                if tag.key == tag_key and tag.value == tag_value:
+                    matching_users.append(user)
+                    break
+
+        if not users_list.next:
+            break
+        cursor = users_list.next
+
+    return matching_users
+```
+
+```python Export users to CSV
+import csv
+
+def export_users_to_csv(client, filename):
+    """Export all users to a CSV file."""
+    users = []
+    cursor = None
+
+    # Collect all users
+    while True:
+        users_list = client.users.get_users(cursor=cursor)
+        users.extend(users_list.results)
+
+        if not users_list.next:
+            break
+        cursor = users_list.next
+
+    # Write to CSV
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['user_id', 'name', 'email']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for user in users:
+            writer.writerow({
+                'user_id': str(user.user_id),
+                'name': user.name,
+                'email': user.email
+            })
+
+# Usage
+export_users_to_csv(client, 'users.csv')
+```
+
+</CodeGroup>
+
+## Advanced Usage
+
+### Custom Timeout Settings
+
+You can specify custom timeout values for API requests:
+
+```python
+# Set a 30-second timeout
+user = client.users.user(
+    user_id=user_id,
+    _request_timeout=30
+)
+
+# Set different connection and read timeouts (connection, read)
+user = client.users.user(
+    user_id=user_id,
+    _request_timeout=(5, 30)  # 5s connection, 30s read
+)
+```
+
+### Getting HTTP Response Information
+
+For advanced use cases, you can access the full HTTP response:
+
+```python
+# Get response with HTTP info
+response = client.users.user_with_http_info(
+    user_id=user_id
+)
+
+user = response.data
+status_code = response.status_code
+headers = response.headers
+
+print(f"Status: {status_code}")
+print(f"User: {user.name}")
+```
+
+<Warning>
+The user ID and email parameters cannot both be omitted. At least one must be provided, or the API will return an error.
+</Warning>
+
+## Best Practices
+
+1. **Use pagination wisely**: When retrieving large lists of users, use appropriate page sizes to balance performance and memory usage.
+
+2. **Cache user data**: If you need to look up the same user multiple times, consider caching the results to reduce API calls.
+
+3. **Handle errors gracefully**: Always wrap API calls in try-except blocks to handle potential errors (see [Error Handling](/guides/error-handling)).
+
+4. **Filter early**: When working with remote users, use the provider filters to reduce the amount of data transferred.
+
+## Related Resources
+
+- [Managing Groups](/guides/managing-groups)
+- [Error Handling](/guides/error-handling)
+- [API Reference: UsersApi](/api-reference/users/get-users)

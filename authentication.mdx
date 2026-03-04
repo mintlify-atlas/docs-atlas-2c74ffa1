@@ -1,0 +1,372 @@
+---
+title: Authentication
+description: How to authenticate with the Opal API using Bearer tokens
+---
+
+The Opal Python SDK uses Bearer token authentication to secure API requests. This guide covers how to obtain and configure your API credentials.
+
+## Authentication Method
+
+Opal uses **Bearer Authentication** (also known as token authentication). Every request to the Opal API must include a valid API token in the Authorization header.
+
+<Note>
+  The Opal API currently supports one authentication scheme: **BearerAuth**. This is a token-based authentication system that uses the HTTP Authorization header.
+</Note>
+
+## Obtaining an API Token
+
+<Steps>
+  <Step title="Log in to Opal">
+    Navigate to your Opal dashboard at [https://app.opal.dev](https://app.opal.dev)
+  </Step>
+  
+  <Step title="Generate API Token">
+    Go to **Settings** → **API Tokens** and click **Generate New Token**.
+    
+    Provide a descriptive name for your token (e.g., "Python SDK - Production") and set an appropriate expiration date.
+  </Step>
+  
+  <Step title="Copy and Store Securely">
+    Copy the generated token immediately. For security reasons, it won't be shown again.
+    
+    <Warning>
+      Treat API tokens like passwords. Never commit them to version control or share them publicly.
+    </Warning>
+  </Step>
+</Steps>
+
+## Configuring Authentication
+
+### Using Environment Variables (Recommended)
+
+The most secure way to handle API tokens is to store them in environment variables:
+
+```python
+import os
+import opal_security as opal
+
+# Load token from environment variable
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+with opal.ApiClient(configuration) as api_client:
+    groups_api = opal.GroupsApi(api_client)
+    # Make API calls...
+```
+
+Set the environment variable in your shell:
+
+<CodeGroup>
+```bash Linux/macOS
+export OPAL_API_TOKEN="your-token-here"
+```
+
+```bash Windows (PowerShell)
+$env:OPAL_API_TOKEN="your-token-here"
+```
+
+```bash Windows (CMD)
+set OPAL_API_TOKEN=your-token-here
+```
+</CodeGroup>
+
+### Using a .env File
+
+For local development, you can use a `.env` file with python-dotenv:
+
+```bash .env
+OPAL_API_TOKEN=your-token-here
+OPAL_API_HOST=https://api.opal.dev/v1
+```
+
+```python
+from dotenv import load_dotenv
+import os
+import opal_security as opal
+
+# Load environment variables from .env file
+load_dotenv()
+
+configuration = opal.Configuration(
+    host=os.environ.get("OPAL_API_HOST", "https://api.opal.dev/v1"),
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+with opal.ApiClient(configuration) as api_client:
+    # Your code here
+    pass
+```
+
+<Warning>
+  Add `.env` to your `.gitignore` file to prevent accidentally committing secrets:
+  
+  ```bash .gitignore
+  .env
+  *.env
+  .env.local
+  ```
+</Warning>
+
+### Direct Token Configuration
+
+For testing purposes only, you can pass the token directly:
+
+```python
+import opal_security as opal
+
+# ⚠️ NOT RECOMMENDED for production
+configuration = opal.Configuration(
+    access_token="your-token-here"
+)
+```
+
+## Configuration Object Details
+
+The `Configuration` class accepts the following authentication parameters:
+
+<ParamField path="access_token" type="str" required>
+  Bearer token for API authentication. This is the primary authentication method.
+  
+  ```python
+  configuration = opal.Configuration(
+      access_token="your-bearer-token"
+  )
+  ```
+</ParamField>
+
+<ParamField path="api_key" type="Dict[str, str]">
+  Dictionary to store API keys. Currently not used by Opal, but available for future authentication schemes.
+  
+  ```python
+  configuration = opal.Configuration(
+      api_key={"key_name": "key_value"}
+  )
+  ```
+</ParamField>
+
+<ParamField path="api_key_prefix" type="Dict[str, str]">
+  Dictionary to store API key prefixes (e.g., "Bearer", "Token"). Automatically set for bearer tokens.
+  
+  ```python
+  configuration = opal.Configuration(
+      api_key={"Authorization": "token-value"},
+      api_key_prefix={"Authorization": "Bearer"}
+  )
+  ```
+</ParamField>
+
+<ParamField path="username" type="str">
+  Username for HTTP basic authentication (not currently used).
+</ParamField>
+
+<ParamField path="password" type="str">
+  Password for HTTP basic authentication (not currently used).
+</ParamField>
+
+## How Authentication Works
+
+When you configure the SDK with an access token, it automatically formats the Authorization header:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="abc123xyz"
+)
+
+# The SDK automatically sends:
+# Authorization: Bearer abc123xyz
+```
+
+The SDK handles this through the `auth_settings()` method in the Configuration class:
+
+```python
+# Internal SDK implementation (opal_security/configuration.py:495-508)
+def auth_settings(self) -> AuthSettings:
+    """Gets Auth Settings dict for api client."""
+    auth: AuthSettings = {}
+    if self.access_token is not None:
+        auth['BearerAuth'] = {
+            'type': 'bearer',
+            'in': 'header',
+            'key': 'Authorization',
+            'value': 'Bearer ' + self.access_token
+        }
+    return auth
+```
+
+## Testing Authentication
+
+Verify your authentication is working correctly:
+
+```python
+import os
+import opal_security as opal
+from opal_security.rest import ApiException
+
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+with opal.ApiClient(configuration) as api_client:
+    users_api = opal.UsersApi(api_client)
+    
+    try:
+        # Attempt to fetch current user info
+        current_user = users_api.user()
+        print(f"✓ Authentication successful!")
+        print(f"Logged in as: {current_user.email}")
+    except ApiException as e:
+        if e.status == 401:
+            print("✗ Authentication failed: Invalid token")
+        elif e.status == 403:
+            print("✗ Authentication failed: Access forbidden")
+        else:
+            print(f"✗ Error: {e.reason}")
+```
+
+## Handling Authentication Errors
+
+Common authentication errors and how to handle them:
+
+### 401 Unauthorized
+
+The token is invalid, expired, or missing:
+
+```python
+from opal_security.rest import ApiException
+
+try:
+    response = api.get_groups()
+except ApiException as e:
+    if e.status == 401:
+        print("Authentication failed. Please check your API token.")
+        print("The token may be expired or invalid.")
+        # Implement token refresh logic here
+```
+
+### 403 Forbidden
+
+The token is valid but lacks necessary permissions:
+
+```python
+try:
+    response = api.delete_group(group_id)
+except ApiException as e:
+    if e.status == 403:
+        print("Access forbidden. Your token lacks permission for this operation.")
+        print("Contact your Opal administrator to request appropriate permissions.")
+```
+
+## Token Refresh Hook
+
+You can implement a custom token refresh function:
+
+```python
+import opal_security as opal
+
+def refresh_token(config: opal.Configuration):
+    """Custom function to refresh expired tokens."""
+    # Implement your token refresh logic here
+    # For example, fetch a new token from your secret manager
+    new_token = fetch_new_token_from_secrets_manager()
+    config.access_token = new_token
+    print("Token refreshed successfully")
+
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+# Set the refresh hook
+configuration.refresh_api_key_hook = refresh_token
+```
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment Variables">
+    Always store API tokens in environment variables, never in source code:
+    
+    ```python
+    # ✓ Good
+    access_token = os.environ["OPAL_API_TOKEN"]
+    
+    # ✗ Bad
+    access_token = "hardcoded-token-12345"
+    ```
+  </Accordion>
+  
+  <Accordion title="Rotate Tokens Regularly">
+    Generate new tokens periodically and revoke old ones:
+    
+    - Set expiration dates on tokens
+    - Rotate tokens every 90 days minimum
+    - Immediately revoke compromised tokens
+  </Accordion>
+  
+  <Accordion title="Use Least Privilege">
+    Request only the permissions your application needs:
+    
+    - Create separate tokens for different environments (dev, staging, prod)
+    - Use read-only tokens where write access isn't needed
+    - Document what each token is used for
+  </Accordion>
+  
+  <Accordion title="Secure Storage">
+    Store tokens securely using secrets management:
+    
+    - **AWS**: AWS Secrets Manager or Parameter Store
+    - **GCP**: Secret Manager
+    - **Azure**: Key Vault
+    - **HashiCorp**: Vault
+    - **Local Development**: python-dotenv with .env files (add to .gitignore)
+  </Accordion>
+  
+  <Accordion title="Monitor Token Usage">
+    Track API token usage in Opal's audit logs:
+    
+    ```python
+    # Query events filtered by API token usage
+    events_api = opal.EventsApi(api_client)
+    response = events_api.events(
+        event_type_filter="api_token_used",
+        start_date_filter="2024/01/01"
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Advanced: Custom Headers
+
+If you need to add custom authentication headers:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
+)
+
+api_client = opal.ApiClient(
+    configuration,
+    header_name="X-Custom-Header",
+    header_value="custom-value"
+)
+
+with api_client:
+    # All requests will include both Authorization and X-Custom-Header
+    groups_api = opal.GroupsApi(api_client)
+    groups = groups_api.get_groups()
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Explore all configuration options for the SDK
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/introduction">
+    Browse the complete API documentation
+  </Card>
+</CardGroup>

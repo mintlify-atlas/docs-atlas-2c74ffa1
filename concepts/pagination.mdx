@@ -1,0 +1,408 @@
+---
+title: "Pagination"
+description: "Understanding cursor-based pagination patterns in the Opal Python SDK"
+---
+
+## Overview
+
+The Opal API uses cursor-based pagination to efficiently handle large result sets. Instead of traditional page numbers, the API returns an opaque cursor that points to the next set of results. This approach is more reliable for dynamic datasets where items may be added or removed during pagination.
+
+## How Cursor-Based Pagination Works
+
+When you make a request to a paginated endpoint, the API returns:
+
+1. **`results`**: The current page of items
+2. **`next`**: A cursor string to fetch the next page (null if no more pages)
+3. **`previous`**: A cursor string for the previous page (null if on first page)
+
+```python
+from opal_security.models import PaginatedUsersList
+
+response = PaginatedUsersList(
+    results=[user1, user2, user3, ...],
+    next="eyJpZCI6MTAwLCJkaXJlY3Rpb24iOiJuZXh0In0=",
+    previous=None
+)
+```
+
+<Note>
+Cursor strings are opaque tokens - don't try to parse or modify them. Always use them exactly as returned by the API.
+</Note>
+
+## Paginated Response Models
+
+The SDK provides paginated response models for all list endpoints:
+
+- `PaginatedUsersList` - For users
+- `PaginatedGroupsList` - For groups
+- `PaginatedResourcesList` - For resources
+- `PaginatedEventList` - For events
+- `PaginatedTagsList` - For tags
+- And more...
+
+### Common Structure
+
+All paginated responses follow the same structure:
+
+```python
+class PaginatedUsersList:
+    next: Optional[str]      # Cursor for next page
+    previous: Optional[str]  # Cursor for previous page
+    results: List[User]      # Current page of results
+```
+
+## Basic Pagination
+
+### First Page
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+
+# Fetch the first page
+response = client.users.get_users(page_size=100)
+
+print(f"Retrieved {len(response.results)} users")
+for user in response.results:
+    print(f"{user.full_name} ({user.email})")
+```
+
+### Iterating Through Pages
+
+```python
+# Iterate through all pages
+cursor = None
+all_users = []
+
+while True:
+    response = client.users.get_users(
+        cursor=cursor,
+        page_size=100
+    )
+    
+    all_users.extend(response.results)
+    print(f"Fetched {len(response.results)} users")
+    
+    # Check if there are more pages
+    if response.next is None:
+        break
+    
+    cursor = response.next
+
+print(f"Total users fetched: {len(all_users)}")
+```
+
+<Info>
+The `cursor` parameter accepts the exact value returned in the `next` field of the previous response.
+</Info>
+
+## Page Size
+
+You can control how many results are returned per page using the `page_size` parameter:
+
+```python
+# Small pages (useful for testing)
+response = client.users.get_users(page_size=10)
+
+# Medium pages (default)
+response = client.users.get_users(page_size=200)  # Default value
+
+# Large pages (maximum)
+response = client.users.get_users(page_size=1000)  # Maximum allowed
+```
+
+<Note>
+The maximum `page_size` is **1000**. The default is **200** if not specified.
+</Note>
+
+## Pagination Helper Function
+
+Create a reusable helper to paginate through any endpoint:
+
+```python
+from typing import Callable, List, TypeVar
+
+T = TypeVar('T')
+
+def paginate_all(fetch_fn: Callable, page_size: int = 200) -> List[T]:
+    """
+    Fetch all results from a paginated endpoint.
+    
+    Args:
+        fetch_fn: Function that accepts cursor and page_size parameters
+        page_size: Number of results per page (default: 200)
+    
+    Returns:
+        List of all results
+    """
+    all_results = []
+    cursor = None
+    
+    while True:
+        response = fetch_fn(cursor=cursor, page_size=page_size)
+        all_results.extend(response.results)
+        
+        if response.next is None:
+            break
+        
+        cursor = response.next
+    
+    return all_results
+
+# Usage
+all_users = paginate_all(client.users.get_users, page_size=100)
+all_groups = paginate_all(client.groups.get_groups, page_size=100)
+all_resources = paginate_all(client.resources.get_resources, page_size=100)
+```
+
+## Examples by Entity Type
+
+### Paginating Users
+
+```python
+# Get all users in your organization
+response = client.users.get_users(page_size=200)
+users = response.results
+
+# Continue fetching if there are more pages
+while response.next:
+    response = client.users.get_users(
+        cursor=response.next,
+        page_size=200
+    )
+    users.extend(response.results)
+
+print(f"Total users: {len(users)}")
+```
+
+### Paginating Groups
+
+```python
+# Get all groups
+all_groups = []
+cursor = None
+
+while True:
+    response = client.groups.get_groups(cursor=cursor, page_size=100)
+    all_groups.extend(response.results)
+    
+    if not response.next:
+        break
+    cursor = response.next
+
+for group in all_groups:
+    print(f"{group.name} - {group.description}")
+```
+
+### Paginating Resources
+
+```python
+# Get all resources with filtering
+all_aws_resources = []
+cursor = None
+
+while True:
+    response = client.resources.get_resources(
+        resource_type="AWS_S3_BUCKET",
+        cursor=cursor,
+        page_size=150
+    )
+    
+    all_aws_resources.extend(response.results)
+    
+    if not response.next:
+        break
+    cursor = response.next
+
+print(f"Found {len(all_aws_resources)} AWS S3 buckets")
+```
+
+### Paginating Requests
+
+```python
+# Get all pending requests
+pending_requests = []
+cursor = None
+
+while True:
+    response = client.requests.get_requests(
+        status="PENDING",
+        cursor=cursor,
+        page_size=50
+    )
+    
+    pending_requests.extend(response.results)
+    
+    if not response.next:
+        break
+    cursor = response.next
+
+for request in pending_requests:
+    print(f"Request {request.id}: {request.reason}")
+```
+
+## Async Pagination
+
+For better performance when fetching large datasets, consider using async patterns:
+
+```python
+import asyncio
+from opal_security import Opal
+
+async def fetch_all_users_async():
+    client = Opal(api_key="your-api-key")
+    all_users = []
+    cursor = None
+    
+    while True:
+        # Note: Assuming async support in the SDK
+        response = await client.users.get_users_async(
+            cursor=cursor,
+            page_size=200
+        )
+        
+        all_users.extend(response.results)
+        
+        if not response.next:
+            break
+        
+        cursor = response.next
+    
+    return all_users
+
+# Run async function
+users = asyncio.run(fetch_all_users_async())
+```
+
+<Info>
+Async support depends on the SDK version. Check the SDK documentation for async method availability.
+</Info>
+
+## Filtering with Pagination
+
+Combine filters with pagination for efficient data retrieval:
+
+```python
+# Get all active users, paginated
+cursor = None
+active_users = []
+
+while True:
+    response = client.users.get_users(
+        status="ACTIVE",
+        cursor=cursor,
+        page_size=200
+    )
+    
+    active_users.extend(response.results)
+    
+    if not response.next:
+        break
+    cursor = response.next
+
+# Get all resources in a specific app
+cursor = None
+app_resources = []
+
+while True:
+    response = client.resources.get_resources(
+        app_id="750e8400-e29b-41d4-a716-446655440000",
+        cursor=cursor,
+        page_size=100
+    )
+    
+    app_resources.extend(response.results)
+    
+    if not response.next:
+        break
+    cursor = response.next
+```
+
+## Generator Pattern
+
+For memory-efficient iteration over large datasets:
+
+```python
+def iter_users(client, page_size=200):
+    """
+    Generator that yields users one at a time without loading all into memory.
+    """
+    cursor = None
+    
+    while True:
+        response = client.users.get_users(cursor=cursor, page_size=page_size)
+        
+        for user in response.results:
+            yield user
+        
+        if not response.next:
+            break
+        
+        cursor = response.next
+
+# Usage - process users one at a time
+for user in iter_users(client):
+    print(f"Processing {user.full_name}")
+    # Process user without loading entire dataset into memory
+```
+
+## Best Practices
+
+1. **Choose appropriate page sizes**: Balance between API calls and memory usage (100-500 is usually optimal)
+2. **Don't modify cursors**: Always use cursor values exactly as returned by the API
+3. **Handle rate limits**: Implement exponential backoff if you hit rate limits during pagination
+4. **Use generators for large datasets**: Avoid loading millions of records into memory
+5. **Combine filters with pagination**: Pre-filter data on the server side when possible
+6. **Check for null `next`**: Always verify `response.next` is not None before continuing
+7. **Consider caching**: For frequently accessed data, cache results with appropriate TTL
+
+## Error Handling
+
+```python
+from opal_security.exceptions import ApiException
+
+def safe_paginate(client, page_size=200, max_retries=3):
+    cursor = None
+    all_results = []
+    
+    while True:
+        retries = 0
+        while retries < max_retries:
+            try:
+                response = client.users.get_users(
+                    cursor=cursor,
+                    page_size=page_size
+                )
+                break
+            except ApiException as e:
+                retries += 1
+                if retries >= max_retries:
+                    raise
+                print(f"Retry {retries}/{max_retries} after error: {e}")
+                time.sleep(2 ** retries)  # Exponential backoff
+        
+        all_results.extend(response.results)
+        
+        if not response.next:
+            break
+        
+        cursor = response.next
+    
+    return all_results
+```
+
+<CardGroup cols={2}>
+  <Card title="Users and Groups" icon="users" href="/concepts/users-and-groups">
+    Learn about paginating users and groups
+  </Card>
+  <Card title="Resources" icon="database" href="/concepts/resources">
+    Learn about paginating resources
+  </Card>
+</CardGroup>
+
+## Related Resources
+
+- [API Reference: Users](/api-reference/users/list-users)
+- [API Reference: Groups](/api-reference/groups/list-groups)
+- [API Reference: Resources](/api-reference/resources/list-resources)

@@ -1,33 +1,159 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Reference"
+description: "Complete reference for the Opal Python SDK API classes"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The Opal Python SDK provides a comprehensive set of API classes to interact with the Opal Security platform programmatically. This reference covers all available API endpoints organized by category.
 
-## Welcome
+## Getting Started
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+All API classes are available through the `opal_security` package:
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```python
+from opal_security import UsersApi, GroupsApi, ResourcesApi
+from opal_security import ApiClient, Configuration
 
-## Authentication
+# Configure the client
+configuration = Configuration(
+    api_key={'BearerAuth': 'your-api-key'}
+)
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
-
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+# Create API instances
+with ApiClient(configuration) as api_client:
+    users_api = UsersApi(api_client)
+    groups_api = GroupsApi(api_client)
+    resources_api = ResourcesApi(api_client)
 ```
+
+## Available API Classes
+
+<CardGroup cols={2}>
+  <Card title="Users" icon="users" href="/api-reference/users">
+    Manage user accounts and identities
+  </Card>
+  
+  <Card title="Groups" icon="layer-group" href="/api-reference/groups">
+    Manage groups and group memberships
+  </Card>
+  
+  <Card title="Resources" icon="server" href="/api-reference/resources">
+    Manage resources and resource access
+  </Card>
+  
+  <Card title="Requests" icon="file-circle-check" href="/api-reference/requests">
+    Create and manage access requests
+  </Card>
+  
+  <Card title="Apps" icon="grid" href="/api-reference/apps">
+    Manage connected applications
+  </Card>
+  
+  <Card title="Access Rules" icon="shield-check" href="/api-reference/access-rules">
+    Configure automated access rules
+  </Card>
+  
+  <Card title="Bundles" icon="box" href="/api-reference/bundles">
+    Manage access bundles
+  </Card>
+  
+  <Card title="Tags" icon="tag" href="/api-reference/tags">
+    Organize resources with tags
+  </Card>
+  
+  <Card title="Owners" icon="user-crown" href="/api-reference/owners">
+    Manage resource owners
+  </Card>
+  
+  <Card title="Group Bindings" icon="link" href="/api-reference/group-bindings">
+    Configure group binding rules
+  </Card>
+  
+  <Card title="IDP Group Mappings" icon="diagram-project" href="/api-reference/idp-group-mappings">
+    Map identity provider groups
+  </Card>
+  
+  <Card title="Delegations" icon="user-plus" href="/api-reference/delegations">
+    Manage delegation policies
+  </Card>
+  
+  <Card title="Configuration Templates" icon="file-lines" href="/api-reference/configuration-templates">
+    Manage configuration templates
+  </Card>
+  
+  <Card title="Message Channels" icon="messages" href="/api-reference/message-channels">
+    Configure notification channels
+  </Card>
+  
+  <Card title="On-Call Schedules" icon="calendar-clock" href="/api-reference/on-call-schedules">
+    Manage on-call schedules
+  </Card>
+  
+  <Card title="Sessions" icon="clock-rotate-left" href="/api-reference/sessions">
+    Manage user sessions
+  </Card>
+  
+  <Card title="Events" icon="timeline" href="/api-reference/events">
+    Access audit logs and events
+  </Card>
+  
+  <Card title="UARs" icon="clipboard-check" href="/api-reference/uars">
+    Manage User Access Reviews
+  </Card>
+  
+  <Card title="Non-Human Identities" icon="robot" href="/api-reference/non-human-identities">
+    Manage service accounts and bots
+  </Card>
+</CardGroup>
+
+## Complete API Class List
+
+| API Class | Description |
+|-----------|-------------|
+| **UsersApi** | Manage users, retrieve user details, and update user information |
+| **GroupsApi** | Create, update, and manage groups and their memberships |
+| **ResourcesApi** | Manage resources, resource access, and resource metadata |
+| **RequestsApi** | Create access requests, approve/deny requests, and manage request lifecycle |
+| **AppsApi** | Manage connected applications and app configurations |
+| **AccessRulesApi** | Configure and manage automated access rules |
+| **BundlesApi** | Create and manage access bundles containing groups and resources |
+| **TagsApi** | Create, update, and manage tags for organizing resources |
+| **OwnersApi** | Assign and manage resource owners |
+| **GroupBindingsApi** | Configure group binding rules for automatic group assignments |
+| **IdpGroupMappingsApi** | Map identity provider groups to Opal groups |
+| **DelegationsApi** | Configure delegation policies for access management |
+| **ConfigurationTemplatesApi** | Manage request configuration templates |
+| **MessageChannelsApi** | Configure Slack and other notification channels |
+| **OnCallSchedulesApi** | Integrate and manage on-call schedules from PagerDuty, Rootly, etc. |
+| **SessionsApi** | Manage and audit user sessions |
+| **EventsApi** | Query audit logs and system events |
+| **UarsApi** | Create and manage User Access Reviews (compliance reviews) |
+| **NonHumanIdentitiesApi** | Manage service accounts, bots, and other non-human identities |
+
+## Core Classes
+
+In addition to the API classes, the SDK provides essential core classes:
+
+- **ApiClient** - HTTP client for making API requests
+- **Configuration** - SDK configuration including authentication
+- **ApiResponse** - Wrapper for API responses
+- **OpenApiException** - Base exception class for API errors
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to authenticate with the Opal API
+  </Card>
+  
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Get started with common use cases
+  </Card>
+  
+  <Card title="Examples" icon="code" href="/examples">
+    Browse code examples and recipes
+  </Card>
+  
+  <Card title="Error Handling" icon="triangle-exclamation" href="/error-handling">
+    Handle errors and exceptions
+  </Card>
+</CardGroup>

@@ -1,0 +1,232 @@
+---
+title: "SessionsApi"
+description: "API class for retrieving active and historical user sessions in Opal"
+---
+
+## Overview
+
+The `SessionsApi` class provides methods to retrieve information about user sessions for specific resources. Sessions represent active or historical user access to resources within your organization.
+
+## Constructor
+
+```python
+from opal_security import SessionsApi
+
+# Initialize with default client
+sessions_api = SessionsApi()
+
+# Or initialize with custom client
+from opal_security import ApiClient
+custom_client = ApiClient()
+sessions_api = SessionsApi(api_client=custom_client)
+```
+
+## Methods
+
+### sessions()
+
+Retrieves a list of `Session` objects for a specific resource, optionally filtered by user.
+
+```python
+sessions(
+    resource_id: UUID,
+    user_id: Optional[str] = None
+) -> SessionsList
+```
+
+#### Parameters
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to query sessions for.
+</ParamField>
+
+<ParamField path="user_id" type="string" optional>
+  The ID of the user you wish to query sessions for. If not provided, returns sessions for all users.
+</ParamField>
+
+#### Returns
+
+`SessionsList` - A list of Session objects for the specified resource.
+
+#### Example
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+
+sessions_api = SessionsApi()
+
+# Get all sessions for a resource
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+sessions = sessions_api.sessions(resource_id=resource_id)
+
+for session in sessions.results:
+    print(f"User: {session.user_id}, Started: {session.start_time}")
+```
+
+### sessions_with_http_info()
+
+Same as `sessions()` but returns an `ApiResponse` object containing HTTP metadata in addition to the data.
+
+```python
+sessions_with_http_info(
+    resource_id: UUID,
+    user_id: Optional[str] = None
+) -> ApiResponse[SessionsList]
+```
+
+#### Parameters
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to query sessions for.
+</ParamField>
+
+<ParamField path="user_id" type="string" optional>
+  The ID of the user you wish to query sessions for.
+</ParamField>
+
+#### Returns
+
+`ApiResponse[SessionsList]` - An API response object containing:
+- `data`: The SessionsList
+- `status_code`: HTTP status code
+- `headers`: Response headers
+
+#### Example
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+
+sessions_api = SessionsApi()
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+response = sessions_api.sessions_with_http_info(resource_id=resource_id)
+
+print(f"Status: {response.status_code}")
+print(f"Sessions: {len(response.data.results)}")
+```
+
+### sessions_without_preload_content()
+
+Same as `sessions()` but returns the raw HTTP response without deserializing the content.
+
+```python
+sessions_without_preload_content(
+    resource_id: UUID,
+    user_id: Optional[str] = None
+) -> RESTResponseType
+```
+
+#### Parameters
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to query sessions for.
+</ParamField>
+
+<ParamField path="user_id" type="string" optional>
+  The ID of the user you wish to query sessions for.
+</ParamField>
+
+#### Returns
+
+`RESTResponseType` - The raw HTTP response object.
+
+## Usage Patterns
+
+### Get All Sessions for a Resource
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+
+sessions_api = SessionsApi()
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+sessions = sessions_api.sessions(resource_id=resource_id)
+
+print(f"Total sessions: {len(sessions.results)}")
+
+for session in sessions.results:
+    print(f"Session ID: {session.id}")
+    print(f"User: {session.user_id}")
+    print(f"Start: {session.start_time}")
+    print(f"End: {session.end_time if session.end_time else 'Active'}")
+    print("---")
+```
+
+### Get Sessions for a Specific User on a Resource
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+
+sessions_api = SessionsApi()
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+user_id = "user_123"
+
+sessions = sessions_api.sessions(
+    resource_id=resource_id,
+    user_id=user_id
+)
+
+print(f"Sessions for user {user_id}: {len(sessions.results)}")
+```
+
+### Monitor Active Sessions
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+from datetime import datetime
+
+sessions_api = SessionsApi()
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+sessions = sessions_api.sessions(resource_id=resource_id)
+
+# Filter for active sessions (those without an end time)
+active_sessions = [
+    session for session in sessions.results 
+    if session.end_time is None
+]
+
+print(f"Currently active sessions: {len(active_sessions)}")
+
+for session in active_sessions:
+    print(f"User {session.user_id} has been active since {session.start_time}")
+```
+
+### Analyze Session Duration
+
+```python
+from opal_security import SessionsApi
+from uuid import UUID
+from datetime import datetime
+
+sessions_api = SessionsApi()
+
+resource_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+sessions = sessions_api.sessions(resource_id=resource_id)
+
+# Calculate average session duration for completed sessions
+completed_sessions = [
+    session for session in sessions.results
+    if session.end_time is not None
+]
+
+if completed_sessions:
+    total_duration = sum(
+        (datetime.fromisoformat(session.end_time) - 
+         datetime.fromisoformat(session.start_time)).total_seconds()
+        for session in completed_sessions
+    )
+    avg_duration = total_duration / len(completed_sessions)
+    print(f"Average session duration: {avg_duration / 60:.2f} minutes")
+```
+
+## Related Models
+
+- `SessionsList` - The response containing Session objects
+- `Session` - Individual session object with start time, end time, and user information

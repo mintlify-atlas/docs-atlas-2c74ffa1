@@ -1,0 +1,386 @@
+---
+title: "UarsApi"
+description: "API class for managing User Access Reviews (UARs) in Opal"
+---
+
+## Overview
+
+The `UarsApi` class provides methods to create, retrieve, and manage User Access Reviews (UARs). UARs are periodic reviews of user access to ensure compliance and appropriate access levels across your organization.
+
+## Constructor
+
+```python
+from opal_security import UarsApi
+
+# Initialize with default client
+uars_api = UarsApi()
+
+# Or initialize with custom client
+from opal_security import ApiClient
+custom_client = ApiClient()
+uars_api = UarsApi(api_client=custom_client)
+```
+
+## Methods
+
+### create_uar()
+
+Starts a new User Access Review with specified settings.
+
+```python
+create_uar(
+    create_uar_info: CreateUARInfo
+) -> UAR
+```
+
+#### Parameters
+
+<ParamField path="create_uar_info" type="CreateUARInfo" required>
+  The settings of the UAR to create. This object contains configuration for the review including scope, reviewers, and timeline.
+</ParamField>
+
+#### Returns
+
+`UAR` - The created User Access Review object.
+
+#### Example
+
+```python
+from opal_security import UarsApi
+from opal_security.models import CreateUARInfo
+
+uars_api = UarsApi()
+
+# Create UAR configuration
+uar_config = CreateUARInfo(
+    name="Q1 2024 Access Review",
+    description="Quarterly review of all user access",
+    # Add other required fields based on CreateUARInfo model
+)
+
+# Start the UAR
+uar = uars_api.create_uar(create_uar_info=uar_config)
+
+print(f"UAR created with ID: {uar.id}")
+print(f"Status: {uar.status}")
+```
+
+### create_uar_with_http_info()
+
+Same as `create_uar()` but returns an `ApiResponse` object containing HTTP metadata in addition to the data.
+
+```python
+create_uar_with_http_info(
+    create_uar_info: CreateUARInfo
+) -> ApiResponse[UAR]
+```
+
+#### Parameters
+
+<ParamField path="create_uar_info" type="CreateUARInfo" required>
+  The settings of the UAR to create.
+</ParamField>
+
+#### Returns
+
+`ApiResponse[UAR]` - An API response object containing:
+- `data`: The created UAR object
+- `status_code`: HTTP status code
+- `headers`: Response headers
+
+### create_uar_without_preload_content()
+
+Same as `create_uar()` but returns the raw HTTP response without deserializing the content.
+
+```python
+create_uar_without_preload_content(
+    create_uar_info: CreateUARInfo
+) -> RESTResponseType
+```
+
+#### Parameters
+
+<ParamField path="create_uar_info" type="CreateUARInfo" required>
+  The settings of the UAR to create.
+</ParamField>
+
+#### Returns
+
+`RESTResponseType` - The raw HTTP response object.
+
+### get_uar()
+
+Retrieves a specific User Access Review by ID.
+
+```python
+get_uar(
+    uar_id: UUID
+) -> UAR
+```
+
+#### Parameters
+
+<ParamField path="uar_id" type="UUID" required>
+  The ID of the UAR to retrieve.
+</ParamField>
+
+#### Returns
+
+`UAR` - The User Access Review object.
+
+#### Example
+
+```python
+from opal_security import UarsApi
+from uuid import UUID
+
+uars_api = UarsApi()
+
+uar_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+uar = uars_api.get_uar(uar_id=uar_id)
+
+print(f"UAR Name: {uar.name}")
+print(f"Status: {uar.status}")
+print(f"Created: {uar.created_at}")
+```
+
+### get_uar_with_http_info()
+
+Same as `get_uar()` but returns an `ApiResponse` object containing HTTP metadata in addition to the data.
+
+```python
+get_uar_with_http_info(
+    uar_id: UUID
+) -> ApiResponse[UAR]
+```
+
+#### Parameters
+
+<ParamField path="uar_id" type="UUID" required>
+  The ID of the UAR to retrieve.
+</ParamField>
+
+#### Returns
+
+`ApiResponse[UAR]` - An API response object containing:
+- `data`: The UAR object
+- `status_code`: HTTP status code
+- `headers`: Response headers
+
+### get_uar_without_preload_content()
+
+Same as `get_uar()` but returns the raw HTTP response without deserializing the content.
+
+```python
+get_uar_without_preload_content(
+    uar_id: UUID
+) -> RESTResponseType
+```
+
+#### Parameters
+
+<ParamField path="uar_id" type="UUID" required>
+  The ID of the UAR to retrieve.
+</ParamField>
+
+#### Returns
+
+`RESTResponseType` - The raw HTTP response object.
+
+### get_uars()
+
+Retrieves a paginated list of all User Access Reviews.
+
+```python
+get_uars(
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> PaginatedUARsList
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value for navigating through result pages.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+`PaginatedUARsList` - A paginated list of UAR objects.
+
+#### Example
+
+```python
+from opal_security import UarsApi
+
+uars_api = UarsApi()
+
+# Get first page of UARs
+result = uars_api.get_uars(page_size=50)
+
+print(f"Total UARs on this page: {len(result.results)}")
+
+for uar in result.results:
+    print(f"ID: {uar.id}, Name: {uar.name}, Status: {uar.status}")
+
+# Get next page if available
+if result.next:
+    next_page = uars_api.get_uars(cursor=result.next, page_size=50)
+```
+
+### get_uars_with_http_info()
+
+Same as `get_uars()` but returns an `ApiResponse` object containing HTTP metadata in addition to the data.
+
+```python
+get_uars_with_http_info(
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> ApiResponse[PaginatedUARsList]
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+`ApiResponse[PaginatedUARsList]` - An API response object containing:
+- `data`: The PaginatedUARsList
+- `status_code`: HTTP status code
+- `headers`: Response headers
+
+### get_uars_without_preload_content()
+
+Same as `get_uars()` but returns the raw HTTP response without deserializing the content.
+
+```python
+get_uars_without_preload_content(
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> RESTResponseType
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+`RESTResponseType` - The raw HTTP response object.
+
+## Usage Patterns
+
+### Create and Monitor a UAR
+
+```python
+from opal_security import UarsApi
+from opal_security.models import CreateUARInfo
+
+uars_api = UarsApi()
+
+# Create a new UAR
+uar_config = CreateUARInfo(
+    name="Monthly Access Review - March 2024",
+    description="Review all active user permissions"
+)
+
+uar = uars_api.create_uar(create_uar_info=uar_config)
+print(f"Created UAR: {uar.id}")
+
+# Later, check the status
+updated_uar = uars_api.get_uar(uar_id=uar.id)
+print(f"Current status: {updated_uar.status}")
+```
+
+### List All Active UARs
+
+```python
+from opal_security import UarsApi
+
+uars_api = UarsApi()
+
+# Get all UARs and filter for active ones
+all_uars = []
+cursor = None
+
+while True:
+    result = uars_api.get_uars(cursor=cursor, page_size=200)
+    all_uars.extend(result.results)
+    
+    if not result.next:
+        break
+    cursor = result.next
+
+# Filter for active UARs
+active_uars = [uar for uar in all_uars if uar.status == "active"]
+
+print(f"Active UARs: {len(active_uars)}")
+for uar in active_uars:
+    print(f"- {uar.name} (Created: {uar.created_at})")
+```
+
+### Paginate Through UARs
+
+```python
+from opal_security import UarsApi
+
+uars_api = UarsApi()
+
+page_num = 1
+cursor = None
+
+while True:
+    result = uars_api.get_uars(cursor=cursor, page_size=50)
+    
+    print(f"\nPage {page_num}:")
+    for uar in result.results:
+        print(f"  {uar.name} - {uar.status}")
+    
+    if not result.next:
+        break
+    
+    cursor = result.next
+    page_num += 1
+
+print(f"\nTotal pages: {page_num}")
+```
+
+### Get UAR Details with HTTP Info
+
+```python
+from opal_security import UarsApi
+from uuid import UUID
+
+uars_api = UarsApi()
+
+uar_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+response = uars_api.get_uar_with_http_info(uar_id=uar_id)
+
+print(f"HTTP Status: {response.status_code}")
+print(f"UAR Name: {response.data.name}")
+print(f"UAR Status: {response.data.status}")
+print(f"Response Headers: {response.headers}")
+```
+
+## Related Models
+
+- `UAR` - User Access Review object containing review details and status
+- `CreateUARInfo` - Configuration object for creating a new UAR
+- `PaginatedUARsList` - Paginated response containing UAR objects

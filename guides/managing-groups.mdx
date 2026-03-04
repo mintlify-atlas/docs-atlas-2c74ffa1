@@ -1,0 +1,392 @@
+---
+title: "Managing Groups"
+description: "Learn how to create and manage groups with the Opal Python SDK"
+---
+
+Groups are a fundamental concept in Opal for organizing users and managing access. This guide shows you how to create groups, add users and resources to groups, and manage group relationships.
+
+## Overview
+
+The `GroupsApi` class provides methods to:
+- Create and manage groups
+- Add and remove users from groups
+- Add and remove resources from groups
+- Manage group hierarchies (containing groups)
+- Configure group settings
+
+## Creating Groups
+
+<Steps>
+  <Step title="Create a basic group">
+    Use the `create_group()` method to create a new group:
+
+    ```python
+    from opal_security import Opal
+    from opal_security.models import CreateGroupInfo
+
+    client = Opal(
+        api_key="YOUR_API_KEY"
+    )
+
+    # Create a new group
+    group_info = CreateGroupInfo(
+        name="Engineering Team",
+        description="All engineering team members"
+    )
+
+    group = client.groups.create_group(
+        create_group_info=group_info
+    )
+
+    print(f"Created group: {group.name}")
+    print(f"Group ID: {group.group_id}")
+    ```
+  </Step>
+
+  <Step title="Create a group with advanced settings">
+    You can specify additional settings when creating a group:
+
+    ```python
+    from opal_security.models import CreateGroupInfo, GroupTypeEnum
+
+    group_info = CreateGroupInfo(
+        name="Senior Engineers",
+        description="Senior engineering team members",
+        group_type=GroupTypeEnum.ROLE_GROUP,
+        require_manager_approval=True
+    )
+
+    group = client.groups.create_group(
+        create_group_info=group_info
+    )
+    ```
+  </Step>
+</Steps>
+
+## Managing Group Members
+
+### Adding Users to Groups
+
+Add users to a group with optional duration and access level settings:
+
+```python
+from uuid import UUID
+
+group_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+user_id = UUID("987fcdeb-51a2-43f1-b234-567890abcdef")
+
+# Add user with indefinite access
+group_user = client.groups.add_group_user(
+    group_id=group_id,
+    user_id=user_id,
+    duration_minutes=0  # 0 means indefinite
+)
+
+print(f"Added user to group: {group_user.user_id}")
+```
+
+<CodeGroup>
+
+```python Temporary Access
+# Add user with temporary access (7 days)
+group_user = client.groups.add_group_user(
+    group_id=group_id,
+    user_id=user_id,
+    duration_minutes=10080  # 7 days in minutes
+)
+```
+
+```python Custom Access Level
+# Add user with specific access level
+from opal_security.models import AddGroupUserRequest
+
+add_request = AddGroupUserRequest(
+    # Additional request parameters
+)
+
+group_user = client.groups.add_group_user(
+    group_id=group_id,
+    user_id=user_id,
+    access_level_remote_id="admin",
+    add_group_user_request=add_request
+)
+```
+
+```python Bulk Add Users
+def add_users_to_group(client, group_id, user_ids, duration_minutes=0):
+    """Add multiple users to a group."""
+    added_users = []
+
+    for user_id in user_ids:
+        try:
+            group_user = client.groups.add_group_user(
+                group_id=group_id,
+                user_id=user_id,
+                duration_minutes=duration_minutes
+            )
+            added_users.append(group_user)
+            print(f"Added user {user_id} to group")
+        except Exception as e:
+            print(f"Failed to add user {user_id}: {e}")
+
+    return added_users
+
+# Usage
+user_ids = [
+    UUID("user-1-uuid"),
+    UUID("user-2-uuid"),
+    UUID("user-3-uuid")
+]
+
+added = add_users_to_group(client, group_id, user_ids)
+```
+
+</CodeGroup>
+
+<Note>
+The maximum duration for temporary access is 525,960 minutes (approximately 1 year).
+</Note>
+
+### Listing Group Members
+
+Retrieve all users in a group:
+
+```python
+# Get all users in a group
+group_users = client.groups.get_group_users(
+    group_id=group_id,
+    page_size=100
+)
+
+for group_user in group_users.results:
+    print(f"User: {group_user.user_id}")
+    print(f"Access level: {group_user.access_level}")
+    if group_user.expires_at:
+        print(f"Expires: {group_user.expires_at}")
+```
+
+## Managing Group Resources
+
+### Adding Resources to Groups
+
+Grant a group access to resources:
+
+```python
+resource_id = UUID("abc12345-6789-0def-1234-567890abcdef")
+
+# Add resource to group
+group_resource = client.groups.add_group_resource(
+    group_id=group_id,
+    resource_id=resource_id
+)
+
+print(f"Added resource {resource_id} to group")
+```
+
+With custom access level:
+
+```python
+from opal_security.models import AddGroupResourceRequest
+
+# Add resource with specific access level
+group_resource = client.groups.add_group_resource(
+    group_id=group_id,
+    resource_id=resource_id,
+    access_level_remote_id="read-only",
+    add_group_resource_request=AddGroupResourceRequest()
+)
+```
+
+### Listing Group Resources
+
+```python
+# Get all resources for a group
+group_resources = client.groups.get_group_resources(
+    group_id=group_id,
+    page_size=100
+)
+
+for resource in group_resources.results:
+    print(f"Resource: {resource.resource_id}")
+    print(f"Access level: {resource.access_level_remote_id}")
+```
+
+## Managing Group Hierarchies
+
+Groups can contain other groups, creating hierarchical access structures.
+
+### Adding Containing Groups
+
+```python
+from opal_security.models import GroupContainingGroup
+
+parent_group_id = UUID("parent-group-uuid")
+child_group_id = UUID("child-group-uuid")
+
+# Add a containing group relationship
+containing_group_info = GroupContainingGroup(
+    containing_group_id=parent_group_id
+)
+
+containing_group = client.groups.add_group_containing_group(
+    group_id=child_group_id,
+    group_containing_group=containing_group_info
+)
+
+print(f"Group {child_group_id} is now contained in {parent_group_id}")
+```
+
+### Listing Containing Groups
+
+```python
+# Get all groups that contain this group
+containing_groups = client.groups.get_group_containing_groups(
+    group_id=group_id
+)
+
+for containing in containing_groups.results:
+    print(f"Contained in: {containing.containing_group_id}")
+```
+
+## Retrieving Groups
+
+<Steps>
+  <Step title="Get a specific group">
+    ```python
+    # Get group by ID
+    group = client.groups.get_group(
+        group_id=group_id
+    )
+
+    print(f"Group: {group.name}")
+    print(f"Description: {group.description}")
+    print(f"Type: {group.group_type}")
+    ```
+  </Step>
+
+  <Step title="List all groups">
+    ```python
+    # Get paginated list of groups
+    groups_list = client.groups.get_groups(
+        page_size=50
+    )
+
+    for group in groups_list.results:
+        print(f"{group.name} - {group.group_id}")
+
+    # Handle pagination
+    if groups_list.next:
+        next_page = client.groups.get_groups(
+            cursor=groups_list.next
+        )
+    ```
+  </Step>
+
+  <Step title="Filter groups by type">
+    ```python
+    from opal_security.models import GroupTypeEnum
+
+    # Get only role groups
+    groups = client.groups.get_groups(
+        group_type=[GroupTypeEnum.ROLE_GROUP]
+    )
+    ```
+  </Step>
+</Steps>
+
+## Updating Groups
+
+Update group properties:
+
+```python
+from opal_security.models import UpdateGroupInfoList
+
+# Update group information
+update_info = UpdateGroupInfoList(
+    name="Updated Group Name",
+    description="Updated description"
+)
+
+updated_group = client.groups.update_groups(
+    group_id=group_id,
+    update_group_info_list=update_info
+)
+```
+
+## Complete Example: Setting Up a Team
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateGroupInfo
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+def setup_engineering_team(client, team_name, user_ids, resource_ids):
+    """
+    Create a group and add users and resources.
+    """
+    # Create the group
+    group_info = CreateGroupInfo(
+        name=team_name,
+        description=f"Members of the {team_name} team"
+    )
+    group = client.groups.create_group(create_group_info=group_info)
+    print(f"Created group: {group.group_id}")
+
+    # Add users
+    for user_id in user_ids:
+        try:
+            client.groups.add_group_user(
+                group_id=group.group_id,
+                user_id=UUID(user_id),
+                duration_minutes=0
+            )
+            print(f"Added user {user_id}")
+        except Exception as e:
+            print(f"Failed to add user {user_id}: {e}")
+
+    # Add resources
+    for resource_id in resource_ids:
+        try:
+            client.groups.add_group_resource(
+                group_id=group.group_id,
+                resource_id=UUID(resource_id)
+            )
+            print(f"Added resource {resource_id}")
+        except Exception as e:
+            print(f"Failed to add resource {resource_id}: {e}")
+
+    return group
+
+# Usage
+team = setup_engineering_team(
+    client,
+    "Platform Engineering",
+    user_ids=["user-1-uuid", "user-2-uuid"],
+    resource_ids=["resource-1-uuid", "resource-2-uuid"]
+)
+```
+
+<Warning>
+Removing a user from a group immediately revokes their access to all resources granted through that group. Use duration-based access for temporary permissions.
+</Warning>
+
+## Best Practices
+
+1. **Use descriptive names**: Give groups clear, descriptive names that explain their purpose.
+
+2. **Leverage group hierarchies**: Use containing groups to create logical access structures.
+
+3. **Set appropriate durations**: Use temporary access (duration_minutes) for time-limited permissions.
+
+4. **Regular audits**: Periodically review group memberships to ensure access is still appropriate.
+
+5. **Error handling**: Always handle exceptions when performing batch operations.
+
+## Related Resources
+
+- [Managing Users](/guides/managing-users)
+- [Managing Resources](/guides/managing-resources)
+- [Access Requests](/guides/access-requests)
+- [API Reference: GroupsApi](/api-reference/groups/create-group)

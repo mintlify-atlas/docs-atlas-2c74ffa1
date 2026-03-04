@@ -1,0 +1,353 @@
+---
+title: "UsersApi"
+description: "Complete reference for the UsersApi class in the Opal Python SDK"
+---
+
+The `UsersApi` class provides methods for managing and retrieving user information in your Opal organization.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+users_api = client.users
+```
+
+## Methods
+
+### get_users
+
+Returns a list of users for your organization.
+
+```python
+def get_users(
+    self,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> PaginatedUsersList
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+Returns a `PaginatedUsersList` object containing:
+
+<ResponseField name="results" type="List[User]">
+  List of user objects
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  Pagination cursor for the next page of results
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  Pagination cursor for the previous page of results
+</ResponseField>
+
+#### Example
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get first page of users
+users = client.users.get_users(page_size=100)
+
+for user in users.results:
+    print(f"User: {user.email}")
+
+# Get next page
+if users.next:
+    next_users = client.users.get_users(cursor=users.next)
+```
+
+---
+
+### user
+
+Returns a specific `User` object by user ID or email.
+
+```python
+def user(
+    self,
+    user_id: Optional[UUID] = None,
+    email: Optional[str] = None
+) -> User
+```
+
+#### Parameters
+
+<ParamField path="user_id" type="UUID" optional>
+  The user ID of the user.
+</ParamField>
+
+<ParamField path="email" type="string" optional>
+  The email of the user. If both user ID and email are provided, user ID will take precedence. If neither are provided, an error will occur.
+</ParamField>
+
+#### Returns
+
+Returns a `User` object with the following fields:
+
+<ResponseField name="id" type="UUID">
+  Unique identifier for the user
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  Email address of the user
+</ResponseField>
+
+<ResponseField name="first_name" type="string">
+  First name of the user
+</ResponseField>
+
+<ResponseField name="last_name" type="string">
+  Last name of the user
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current status of the user
+</ResponseField>
+
+#### Example
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get user by email
+user = client.users.user(email="user@example.com")
+print(f"User ID: {user.id}")
+print(f"Name: {user.first_name} {user.last_name}")
+
+# Get user by ID
+from uuid import UUID
+user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+user = client.users.user(user_id=user_id)
+```
+
+---
+
+### get_remote_users
+
+Returns a list of remote users for your organization. Remote users represent user accounts in third-party systems integrated with Opal.
+
+```python
+def get_remote_users(
+    self,
+    third_party_provider: Optional[List[ThirdPartyProviderEnum]] = None,
+    user_id: Optional[List[UUID]] = None,
+    remote_id: Optional[List[str]] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> PaginatedRemoteUsersList
+```
+
+#### Parameters
+
+<ParamField path="third_party_provider" type="List[ThirdPartyProviderEnum]" optional>
+  Filter remote users by their third party provider.
+</ParamField>
+
+<ParamField path="user_id" type="List[UUID]" optional>
+  Filter remote users by their user ID.
+</ParamField>
+
+<ParamField path="remote_id" type="List[str]" optional>
+  Filter remote users by their remote ID.
+</ParamField>
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+Returns a `PaginatedRemoteUsersList` object containing:
+
+<ResponseField name="results" type="List[RemoteUser]">
+  List of remote user objects
+</ResponseField>
+
+<ResponseField name="next" type="string">
+  Pagination cursor for the next page of results
+</ResponseField>
+
+<ResponseField name="previous" type="string">
+  Pagination cursor for the previous page of results
+</ResponseField>
+
+#### Example
+
+```python
+from opal_security import Opal
+from opal_security.models.third_party_provider_enum import ThirdPartyProviderEnum
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get all remote users
+remote_users = client.users.get_remote_users(page_size=100)
+
+# Filter by provider
+okta_users = client.users.get_remote_users(
+    third_party_provider=[ThirdPartyProviderEnum.OKTA]
+)
+
+# Filter by user ID
+from uuid import UUID
+user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+remote_users = client.users.get_remote_users(user_id=[user_id])
+
+for remote_user in remote_users.results:
+    print(f"Remote User: {remote_user.remote_id}")
+```
+
+---
+
+### get_user_tags
+
+Returns all tags applied to a specific user.
+
+```python
+def get_user_tags(
+    self,
+    user_id: UUID
+) -> TagsList
+```
+
+#### Parameters
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user whose tags to return.
+</ParamField>
+
+#### Returns
+
+Returns a `TagsList` object containing:
+
+<ResponseField name="results" type="List[Tag]">
+  List of tag objects applied to the user
+</ResponseField>
+
+#### Example
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+tags = client.users.get_user_tags(user_id=user_id)
+
+for tag in tags.results:
+    print(f"Tag: {tag.name}")
+```
+
+---
+
+## Advanced Usage
+
+### HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns the full HTTP response along with the data:
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get users with HTTP info
+response = client.users.get_users_with_http_info(page_size=50)
+print(f"Status Code: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+### Streaming Responses
+
+Each method also has a `*_without_preload_content` variant for handling large responses:
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get raw response without preloading content
+response = client.users.get_users_without_preload_content()
+# Process streaming response as needed
+```
+
+### Request Timeout
+
+All methods support custom timeout settings:
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Set total request timeout (in seconds)
+users = client.users.get_users(_request_timeout=30)
+
+# Set separate connection and read timeouts
+users = client.users.get_users(_request_timeout=(5, 30))
+```
+
+### Custom Headers
+
+You can pass custom headers to any request:
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+custom_headers = {
+    "X-Custom-Header": "value"
+}
+
+user = client.users.user(
+    email="user@example.com",
+    _headers=custom_headers
+)
+```
+
+## Error Handling
+
+All methods may raise exceptions for error conditions:
+
+```python
+from opal_security import Opal
+from opal_security.exceptions import ApiException
+
+client = Opal(api_key="YOUR_API_KEY")
+
+try:
+    user = client.users.user(email="nonexistent@example.com")
+except ApiException as e:
+    print(f"Error: {e.status} - {e.reason}")
+    print(f"Response body: {e.body}")
+```
+
+## Related
+
+- [Managing Users Guide](/guides/managing-users)
+- [Users and Groups Concepts](/concepts/users-and-groups)
+- [Authentication](/authentication)

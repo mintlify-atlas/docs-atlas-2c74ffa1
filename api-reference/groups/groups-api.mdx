@@ -1,0 +1,779 @@
+---
+title: 'GroupsApi'
+description: 'Complete reference for the GroupsApi class in the Opal Python SDK'
+---
+
+## Overview
+
+The `GroupsApi` class provides methods to manage groups in the Opal platform. This includes creating groups, adding users and resources, managing group memberships, and configuring group settings.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+groups_api = client.groups
+```
+
+## Methods
+
+### create_group
+
+Creates an Opal group or imports a remote group.
+
+```python
+group = groups_api.create_group(
+    create_group_info=CreateGroupInfo(
+        name="Engineering Team",
+        description="Main engineering group",
+        group_type=GroupTypeEnum.OPAL_GROUP
+    )
+)
+```
+
+<ParamField path="create_group_info" type="CreateGroupInfo" required>
+  Information about the group to create
+</ParamField>
+
+<ResponseField name="group" type="Group">
+  The created group object
+</ResponseField>
+
+---
+
+### get_group
+
+Retrieves a specific group by ID.
+
+```python
+group = groups_api.get_group(group_id="550e8400-e29b-41d4-a716-446655440000")
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group to retrieve
+</ParamField>
+
+<ResponseField name="group" type="Group">
+  The group object
+</ResponseField>
+
+---
+
+### get_groups
+
+Retrieves a paginated list of groups.
+
+```python
+groups = groups_api.get_groups(
+    cursor=None,
+    page_size=200,
+    group_type=GroupTypeEnum.OPAL_GROUP
+)
+```
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+<ParamField path="group_type" type="GroupTypeEnum">
+  Filter groups by type
+</ParamField>
+
+<ResponseField name="groups" type="PaginatedGroupsList">
+  Paginated list of group objects
+</ResponseField>
+
+---
+
+### update_groups
+
+Bulk updates a list of groups.
+
+```python
+groups_api.update_groups(
+    update_group_info_list=UpdateGroupInfoList(
+        groups=[UpdateGroupInfo(...)]
+    )
+)
+```
+
+<ParamField path="update_group_info_list" type="UpdateGroupInfoList" required>
+  List of groups to be updated
+</ParamField>
+
+---
+
+### delete_group
+
+Deletes a group.
+
+```python
+groups_api.delete_group(group_id="550e8400-e29b-41d4-a716-446655440000")
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group to delete
+</ParamField>
+
+---
+
+## User Management
+
+### add_group_user
+
+Adds a user to a group.
+
+```python
+group_user = groups_api.add_group_user(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440000",
+    duration_minutes=0,  # 0 = indefinite
+    access_level_remote_id=""
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to add
+</ParamField>
+
+<ParamField path="duration_minutes" type="int">
+  The duration for which the group can be accessed (in minutes). Use 0 for indefinite. Maximum is 525960 (1 year).
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level to grant. If omitted, the default access level (empty string) is used.
+</ParamField>
+
+<ParamField path="add_group_user_request" type="AddGroupUserRequest">
+  Additional request parameters
+</ParamField>
+
+<ResponseField name="group_user" type="GroupUser">
+  The created group user object
+</ResponseField>
+
+---
+
+### get_group_users
+
+Retrieves users in a group.
+
+```python
+users = groups_api.get_group_users(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    cursor=None,
+    page_size=200
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+<ResponseField name="users" type="GroupUserList">
+  List of users in the group
+</ResponseField>
+
+---
+
+### get_user_groups
+
+Retrieves groups that a user is a member of.
+
+```python
+groups = groups_api.get_user_groups(
+    user_id="660e8400-e29b-41d4-a716-446655440000",
+    cursor=None,
+    page_size=200,
+    include_access_level_remote_ids=None
+)
+```
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+<ParamField path="include_access_level_remote_ids" type="List[str]">
+  Filter to only groups where the user has specific access levels
+</ParamField>
+
+<ResponseField name="groups" type="PaginatedGroupsList">
+  Paginated list of groups the user belongs to
+</ResponseField>
+
+---
+
+### update_group_user
+
+Updates a user's membership in a group.
+
+```python
+group_user = groups_api.update_group_user(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440000",
+    duration_minutes=1440,  # 24 hours
+    access_level_remote_id="admin"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ParamField path="duration_minutes" type="int">
+  The updated duration for group access (in minutes). Maximum is 525960.
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The updated access level remote ID
+</ParamField>
+
+<ParamField path="update_group_user_request" type="UpdateGroupUserRequest">
+  Additional update parameters
+</ParamField>
+
+<ResponseField name="group_user" type="GroupUser">
+  The updated group user object
+</ResponseField>
+
+---
+
+### delete_group_user
+
+Removes a user from a group.
+
+```python
+groups_api.delete_group_user(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to remove
+</ParamField>
+
+---
+
+## Resource Management
+
+### add_group_resource
+
+Adds a resource to a group.
+
+```python
+group_resource = groups_api.add_group_resource(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    resource_id="770e8400-e29b-41d4-a716-446655440000",
+    access_level_remote_id=""
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level to grant. If omitted, the default access level (empty string) is used.
+</ParamField>
+
+<ParamField path="add_group_resource_request" type="AddGroupResourceRequest">
+  Additional request parameters
+</ParamField>
+
+<ResponseField name="group_resource" type="GroupResource">
+  The created group resource object
+</ResponseField>
+
+---
+
+### get_group_resources
+
+Retrieves resources associated with a group.
+
+```python
+resources = groups_api.get_group_resources(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    cursor=None,
+    page_size=200
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+<ResponseField name="resources" type="GroupResourceList">
+  List of resources associated with the group
+</ResponseField>
+
+---
+
+### set_group_resources
+
+Sets the complete list of resources for a group.
+
+```python
+groups_api.set_group_resources(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    update_group_resources_info=UpdateGroupResourcesInfo(
+        resource_ids=["770e8400-e29b-41d4-a716-446655440000"]
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="update_group_resources_info" type="UpdateGroupResourcesInfo" required>
+  The complete list of resource IDs to set for the group
+</ParamField>
+
+---
+
+## Group Hierarchy
+
+### add_group_containing_group
+
+Adds a containing group (parent group) to a group.
+
+```python
+containing_group = groups_api.add_group_containing_group(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    group_containing_group=GroupContainingGroup(
+        containing_group_id="880e8400-e29b-41d4-a716-446655440000"
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="group_containing_group" type="GroupContainingGroup" required>
+  Information about the containing group to add
+</ParamField>
+
+<ResponseField name="containing_group" type="GroupContainingGroup">
+  The created containing group relationship
+</ResponseField>
+
+---
+
+### get_group_containing_groups
+
+Retrieves all containing groups (parent groups) for a group.
+
+```python
+containing_groups = groups_api.get_group_containing_groups(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="containing_groups" type="GroupContainingGroupList">
+  List of containing groups
+</ResponseField>
+
+---
+
+### get_group_containing_group
+
+Retrieves a specific containing group relationship.
+
+```python
+containing_group = groups_api.get_group_containing_group(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    containing_group_id="880e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="containing_group_id" type="UUID" required>
+  The ID of the containing group
+</ParamField>
+
+<ResponseField name="containing_group" type="GroupContainingGroup">
+  The containing group relationship
+</ResponseField>
+
+---
+
+### remove_group_containing_group
+
+Removes a containing group relationship.
+
+```python
+groups_api.remove_group_containing_group(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    containing_group_id="880e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="containing_group_id" type="UUID" required>
+  The ID of the containing group to remove
+</ParamField>
+
+---
+
+## Group Configuration
+
+### get_group_reviewers
+
+Retrieves the list of reviewers for a group.
+
+```python
+reviewers = groups_api.get_group_reviewers(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="reviewers" type="ReviewerIDList">
+  List of reviewer IDs
+</ResponseField>
+
+---
+
+### set_group_reviewers
+
+Sets the complete list of reviewers for a group.
+
+```python
+groups_api.set_group_reviewers(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    reviewer_id_list=ReviewerIDList(
+        reviewer_ids=["990e8400-e29b-41d4-a716-446655440000"]
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="reviewer_id_list" type="ReviewerIDList" required>
+  The complete list of reviewer IDs to set
+</ParamField>
+
+---
+
+### get_group_reviewer_stages
+
+Retrieves the reviewer stages for a group.
+
+```python
+stages = groups_api.get_group_reviewer_stages(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="stages" type="ReviewerStageList">
+  List of reviewer stages
+</ResponseField>
+
+---
+
+### set_group_reviewer_stages
+
+Sets the reviewer stages for a group.
+
+```python
+groups_api.set_group_reviewer_stages(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    reviewer_stage_list=ReviewerStageList(
+        stages=[ReviewerStage(...)]
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="reviewer_stage_list" type="ReviewerStageList" required>
+  The reviewer stages to set
+</ParamField>
+
+---
+
+### get_group_visibility
+
+Retrieves the visibility settings for a group.
+
+```python
+visibility = groups_api.get_group_visibility(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="visibility" type="VisibilityInfo">
+  The group's visibility settings
+</ResponseField>
+
+---
+
+### set_group_visibility
+
+Sets the visibility settings for a group.
+
+```python
+groups_api.set_group_visibility(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    visibility_info=VisibilityInfo(...)
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="visibility_info" type="VisibilityInfo" required>
+  The visibility settings to apply
+</ParamField>
+
+---
+
+### get_group_tags
+
+Retrieves tags associated with a group.
+
+```python
+tags = groups_api.get_group_tags(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="tags" type="TagsList">
+  List of tags associated with the group
+</ResponseField>
+
+---
+
+### get_group_message_channels
+
+Retrieves message channels associated with a group.
+
+```python
+channels = groups_api.get_group_message_channels(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="channels" type="MessageChannelList">
+  List of message channels
+</ResponseField>
+
+---
+
+### set_group_message_channels
+
+Sets the message channels for a group.
+
+```python
+groups_api.set_group_message_channels(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    message_channel_id_list=MessageChannelIDList(
+        channel_ids=["channel-123"]
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="message_channel_id_list" type="MessageChannelIDList" required>
+  The message channel IDs to set
+</ParamField>
+
+---
+
+### get_group_on_call_schedules
+
+Retrieves on-call schedules associated with a group.
+
+```python
+schedules = groups_api.get_group_on_call_schedules(
+    group_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ResponseField name="schedules" type="OnCallScheduleList">
+  List of on-call schedules
+</ResponseField>
+
+---
+
+### set_group_on_call_schedules
+
+Sets the on-call schedules for a group.
+
+```python
+groups_api.set_group_on_call_schedules(
+    group_id="550e8400-e29b-41d4-a716-446655440000",
+    on_call_schedule_id_list=OnCallScheduleIDList(
+        schedule_ids=["schedule-123"]
+    )
+)
+```
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group
+</ParamField>
+
+<ParamField path="on_call_schedule_id_list" type="OnCallScheduleIDList" required>
+  The on-call schedule IDs to set
+</ParamField>
+
+---
+
+## Additional Parameters
+
+All methods support these optional parameters for advanced usage:
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for a single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for a single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for a single request.
+</ParamField>
+
+## Example Usage
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateGroupInfo, GroupTypeEnum
+
+# Initialize client
+client = Opal(api_key="your-api-key")
+
+# Create a new group
+group = client.groups.create_group(
+    create_group_info=CreateGroupInfo(
+        name="Data Science Team",
+        description="Data science and analytics team",
+        group_type=GroupTypeEnum.OPAL_GROUP
+    )
+)
+
+print(f"Created group: {group.id}")
+
+# Add a user to the group
+group_user = client.groups.add_group_user(
+    group_id=group.id,
+    user_id="user-uuid",
+    duration_minutes=0  # Indefinite access
+)
+
+print(f"Added user to group")
+
+# List all users in the group
+users = client.groups.get_group_users(
+    group_id=group.id,
+    page_size=100
+)
+
+for user in users.results:
+    print(f"User: {user.user_id}")
+
+# Add a resource to the group
+group_resource = client.groups.add_group_resource(
+    group_id=group.id,
+    resource_id="resource-uuid"
+)
+
+print(f"Added resource to group")
+```

@@ -1,0 +1,357 @@
+---
+title: "Access Request Workflows"
+description: "Understanding access request creation, approval workflows, and lifecycle management in the Opal Python SDK"
+---
+
+## Overview
+
+Access requests are the core workflow in Opal for provisioning time-bound or permanent access to resources and groups. The SDK provides comprehensive support for creating, managing, and tracking access requests through their full lifecycle.
+
+## Request Model
+
+The `Request` object represents an access request created by a user. Requests can include multiple resources or groups and go through approval stages before being provisioned.
+
+### Request Structure
+
+```python
+from opal_security.models import Request, RequestStatusEnum, RequestedItem
+from datetime import datetime
+
+request = Request(
+    id="950e8400-e29b-41d4-a716-446655440000",
+    created_at=datetime(2026, 3, 4, 9, 30, 0),
+    updated_at=datetime(2026, 3, 4, 10, 15, 0),
+    requester_id="550e8400-e29b-41d4-a716-446655440000",
+    target_user_id="550e8400-e29b-41d4-a716-446655440000",
+    status=RequestStatusEnum.PENDING,
+    reason="Need access to debug production issue #1234",
+    duration_minutes=120,  # 2 hours
+    requested_items_list=[
+        RequestedItem(
+            resource_id="850e8400-e29b-41d4-a716-446655440000",
+            name="production-database",
+            access_level_name="Read-Only",
+            access_level_remote_id="read_only"
+        )
+    ]
+)
+```
+
+### Key Request Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | UUID | Unique identifier for the request |
+| `created_at` | datetime | When the request was created |
+| `updated_at` | datetime | When the request was last updated |
+| `requester_id` | UUID | User who created the request |
+| `target_user_id` | UUID | User who will receive access (optional) |
+| `target_group_id` | UUID | Group that will receive access (optional) |
+| `status` | RequestStatusEnum | Current request status |
+| `reason` | str | Justification for the access request |
+| `duration_minutes` | int | Duration of access in minutes |
+| `requested_items_list` | List[RequestedItem] | Resources or groups being requested |
+
+<Note>
+If `target_user_id` is not specified, the request is for the requester themselves. When `target_group_id` is specified, the request grants access to an entire group.
+</Note>
+
+## Request Status
+
+Requests progress through several states during their lifecycle:
+
+```python
+from opal_security.models import RequestStatusEnum
+
+# Available request statuses
+RequestStatusEnum.PENDING    # Awaiting approval
+RequestStatusEnum.APPROVED   # Approved and provisioned
+RequestStatusEnum.DENIED     # Rejected by a reviewer
+RequestStatusEnum.CANCELED   # Canceled by requester
+```
+
+<CardGroup cols={2}>
+  <Card title="PENDING" icon="clock">
+    Request is awaiting approval from one or more reviewers
+  </Card>
+  <Card title="APPROVED" icon="check">
+    Request has been approved and access has been provisioned
+  </Card>
+  <Card title="DENIED" icon="x">
+    Request was rejected by a reviewer
+  </Card>
+  <Card title="CANCELED" icon="ban">
+    Request was canceled before approval
+  </Card>
+</CardGroup>
+
+## Requested Items
+
+The `RequestedItem` object represents a single resource or group included in an access request.
+
+### RequestedItem Structure
+
+```python
+from opal_security.models import RequestedItem
+
+# Requesting a resource
+resource_item = RequestedItem(
+    resource_id="850e8400-e29b-41d4-a716-446655440000",
+    name="production-database",
+    remote_name="prod-db-instance",
+    access_level_name="Read-Only",
+    access_level_remote_id="read_only"
+)
+
+# Requesting a group
+group_item = RequestedItem(
+    group_id="650e8400-e29b-41d4-a716-446655440000",
+    name="Engineering Team",
+    access_level_name="Member",
+    access_level_remote_id="member"
+)
+```
+
+### Key Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `resource_id` | UUID | ID of requested resource (if applicable) |
+| `group_id` | UUID | ID of requested group (if applicable) |
+| `name` | str | Human-readable name of the target |
+| `remote_name` | str | Name in the remote system |
+| `access_level_name` | str | Human-readable access level |
+| `access_level_remote_id` | str | Machine-readable access level ID |
+
+<Info>
+Each `RequestedItem` will have either a `resource_id` or `group_id`, but not both.
+</Info>
+
+## Creating Access Requests
+
+### Self-Service Requests
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+
+# Request access to a single resource
+request = client.requests.create_request(
+    reason="Investigating customer-reported issue #5678",
+    duration_minutes=180,  # 3 hours
+    resources=[
+        {
+            "resource_id": "850e8400-e29b-41d4-a716-446655440000",
+            "access_level_remote_id": "read_only"
+        }
+    ]
+)
+print(f"Request created: {request.id}")
+print(f"Status: {request.status}")
+```
+
+### Multi-Resource Requests
+
+```python
+# Request access to multiple resources at once
+request = client.requests.create_request(
+    reason="Production incident response - SEV1",
+    duration_minutes=240,  # 4 hours
+    resources=[
+        {
+            "resource_id": "850e8400-e29b-41d4-a716-446655440000",
+            "access_level_remote_id": "read_only"
+        },
+        {
+            "resource_id": "860e8400-e29b-41d4-a716-446655440001",
+            "access_level_remote_id": "viewer"
+        }
+    ]
+)
+```
+
+### Requesting Group Membership
+
+```python
+# Request to join a group
+request = client.requests.create_request(
+    reason="Need access to deploy to staging environment",
+    duration_minutes=1440,  # 24 hours
+    groups=[
+        {
+            "group_id": "650e8400-e29b-41d4-a716-446655440000",
+            "access_level_remote_id": "member"
+        }
+    ]
+)
+```
+
+### Requesting Access for Another User
+
+```python
+# Manager requesting access for a team member
+request = client.requests.create_request(
+    target_user_id="560e8400-e29b-41d4-a716-446655440000",
+    reason="New engineer onboarding - needs staging access",
+    duration_minutes=-1,  # Indefinite access
+    groups=[
+        {
+            "group_id": "650e8400-e29b-41d4-a716-446655440000"
+        }
+    ]
+)
+```
+
+<Note>
+A `duration_minutes` of `-1` represents indefinite access that does not expire.
+</Note>
+
+## Managing Requests
+
+### Fetching Requests
+
+```python
+# List all requests
+response = client.requests.get_requests(page_size=50)
+for request in response.results:
+    print(f"Request {request.id}: {request.status}")
+    print(f"  Reason: {request.reason}")
+    print(f"  Items: {len(request.requested_items_list)}")
+
+# Get a specific request
+request = client.requests.get_request(
+    request_id="950e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+### Filtering Requests
+
+```python
+# Filter by status
+pending_requests = client.requests.get_requests(
+    status="PENDING",
+    page_size=100
+)
+
+# Filter by requester
+user_requests = client.requests.get_requests(
+    requester_id="550e8400-e29b-41d4-a716-446655440000",
+    page_size=100
+)
+```
+
+### Canceling a Request
+
+```python
+# Cancel a pending request
+client.requests.cancel_request(
+    request_id="950e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+## Approval Workflows
+
+### Reviewer Stages
+
+Requests can require approval from multiple reviewers in stages:
+
+```python
+# Check approval stages
+if request.reviewer_stages:
+    for stage in request.reviewer_stages.stages:
+        print(f"Stage: {stage.stage_number}")
+        for reviewer in stage.reviewers:
+            print(f"  Reviewer: {reviewer.user_id}")
+            print(f"  Decision: {reviewer.approval_status}")
+```
+
+### Approving a Request
+
+```python
+# Approve a request as a reviewer
+client.requests.approve_request(
+    request_id="950e8400-e29b-41d4-a716-446655440000",
+    comment="Approved for incident response"
+)
+```
+
+### Denying a Request
+
+```python
+# Deny a request with a reason
+client.requests.deny_request(
+    request_id="950e8400-e29b-41d4-a716-446655440000",
+    comment="Insufficient justification provided"
+)
+```
+
+## Custom Fields
+
+Requests can include custom field responses for additional context:
+
+```python
+# Access custom field responses
+if request.custom_fields_responses:
+    for field_response in request.custom_fields_responses:
+        print(f"Field: {field_response.field_name}")
+        print(f"Value: {field_response.field_value}")
+```
+
+## Request Configuration
+
+Resources and groups can have specific request configurations that affect how requests are processed:
+
+```python
+# Check resource request settings
+resource = client.resources.get_resource(resource_id)
+if resource.require_manager_approval:
+    print("This request will require manager approval")
+if resource.require_support_ticket:
+    print("This request requires a support ticket")
+if resource.require_mfa_to_request:
+    print("MFA is required to submit this request")
+if resource.auto_approval:
+    print("This request will be auto-approved")
+```
+
+<CardGroup cols={2}>
+  <Card title="Users and Groups" icon="users" href="/concepts/users-and-groups">
+    Learn about users, groups, and memberships
+  </Card>
+  <Card title="Resources" icon="database" href="/concepts/resources">
+    Understand resources and access levels
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+1. **Provide detailed reasons**: Clear justifications help reviewers make informed decisions
+2. **Request appropriate durations**: Use the resource's `recommended_duration` as a guideline
+3. **Batch related requests**: Request multiple related resources in a single request for efficiency
+4. **Monitor request status**: Implement webhooks or polling to track request progress
+5. **Handle denials gracefully**: Check the reviewer's comments to understand why a request was denied
+6. **Cancel obsolete requests**: Cancel pending requests that are no longer needed
+7. **Respect approval workflows**: Don't bypass reviewer stages or approval requirements
+
+## Access Extensions
+
+For resources that support extensions, users can extend their access before it expires:
+
+```python
+# Extend an active access grant
+client.requests.extend_access(
+    request_id="950e8400-e29b-41d4-a716-446655440000",
+    extension_duration_minutes=60  # Extend by 1 hour
+)
+```
+
+<Info>
+Extensions are only available if the resource or group has `extensions_duration_in_minutes` configured to a value greater than 0.
+</Info>
+
+## Related Resources
+
+- [API Reference: Requests](/api-reference/requests/list-requests)
+- [API Reference: Create Request](/api-reference/requests/create-request)
+- [Pagination Guide](/concepts/pagination)

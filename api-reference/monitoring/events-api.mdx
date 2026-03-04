@@ -1,0 +1,242 @@
+---
+title: "EventsApi"
+description: "API class for managing and retrieving audit events in Opal"
+---
+
+## Overview
+
+The `EventsApi` class provides methods to retrieve and filter audit events from the Opal platform. Events track actions taken by users, API tokens, and system processes.
+
+## Constructor
+
+```python
+from opal_security import EventsApi
+
+# Initialize with default client
+events_api = EventsApi()
+
+# Or initialize with custom client
+from opal_security import ApiClient
+custom_client = ApiClient()
+events_api = EventsApi(api_client=custom_client)
+```
+
+## Methods
+
+### events()
+
+Retrieves a paginated list of `Event` objects with optional filtering.
+
+```python
+events(
+    start_date_filter: Optional[str] = None,
+    end_date_filter: Optional[str] = None,
+    actor_filter: Optional[UUID] = None,
+    object_filter: Optional[UUID] = None,
+    event_type_filter: Optional[str] = None,
+    api_token_filter: Optional[str] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> PaginatedEventList
+```
+
+#### Parameters
+
+<ParamField path="start_date_filter" type="string" optional>
+  A start date filter for the events. Events after this date will be returned.
+</ParamField>
+
+<ParamField path="end_date_filter" type="string" optional>
+  An end date filter for the events. Events before this date will be returned.
+</ParamField>
+
+<ParamField path="actor_filter" type="UUID" optional>
+  An actor filter for the events. Supply the ID of the actor to filter by.
+</ParamField>
+
+<ParamField path="object_filter" type="UUID" optional>
+  An object filter for the events. Supply the ID of the object to filter by.
+</ParamField>
+
+<ParamField path="event_type_filter" type="string" optional>
+  An event type filter for the events. Filter by specific event types.
+</ParamField>
+
+<ParamField path="api_token_filter" type="string" optional>
+  An API filter for the events. Supply the name and preview of the API token.
+</ParamField>
+
+<ParamField path="cursor" type="string" optional>
+  The pagination cursor value for navigating through result pages.
+</ParamField>
+
+<ParamField path="page_size" type="integer" optional>
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+#### Returns
+
+`PaginatedEventList` - A paginated list of Event objects matching the filter criteria.
+
+#### Example
+
+```python
+from opal_security import EventsApi
+from datetime import datetime, timedelta
+
+events_api = EventsApi()
+
+# Get all events from the last 7 days
+end_date = datetime.now().isoformat()
+start_date = (datetime.now() - timedelta(days=7)).isoformat()
+
+result = events_api.events(
+    start_date_filter=start_date,
+    end_date_filter=end_date,
+    page_size=100
+)
+
+for event in result.results:
+    print(f"Event: {event.event_type} at {event.created_at}")
+
+# Paginate through remaining results
+if result.next:
+    next_page = events_api.events(
+        start_date_filter=start_date,
+        end_date_filter=end_date,
+        cursor=result.next,
+        page_size=100
+    )
+```
+
+### events_with_http_info()
+
+Same as `events()` but returns an `ApiResponse` object containing HTTP metadata in addition to the data.
+
+```python
+events_with_http_info(
+    start_date_filter: Optional[str] = None,
+    end_date_filter: Optional[str] = None,
+    actor_filter: Optional[UUID] = None,
+    object_filter: Optional[UUID] = None,
+    event_type_filter: Optional[str] = None,
+    api_token_filter: Optional[str] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> ApiResponse[PaginatedEventList]
+```
+
+#### Parameters
+
+Same as `events()` method.
+
+#### Returns
+
+`ApiResponse[PaginatedEventList]` - An API response object containing:
+- `data`: The PaginatedEventList
+- `status_code`: HTTP status code
+- `headers`: Response headers
+
+#### Example
+
+```python
+from opal_security import EventsApi
+
+events_api = EventsApi()
+
+response = events_api.events_with_http_info(
+    event_type_filter="access_granted",
+    page_size=50
+)
+
+print(f"Status: {response.status_code}")
+print(f"Events: {len(response.data.results)}")
+```
+
+### events_without_preload_content()
+
+Same as `events()` but returns the raw HTTP response without deserializing the content.
+
+```python
+events_without_preload_content(
+    start_date_filter: Optional[str] = None,
+    end_date_filter: Optional[str] = None,
+    actor_filter: Optional[UUID] = None,
+    object_filter: Optional[UUID] = None,
+    event_type_filter: Optional[str] = None,
+    api_token_filter: Optional[str] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None
+) -> RESTResponseType
+```
+
+#### Parameters
+
+Same as `events()` method.
+
+#### Returns
+
+`RESTResponseType` - The raw HTTP response object.
+
+## Common Filtering Patterns
+
+### Filter by User Activity
+
+```python
+from uuid import UUID
+
+events_api = EventsApi()
+
+# Get all events for a specific user
+user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+events = events_api.events(actor_filter=user_id)
+```
+
+### Filter by Event Type
+
+```python
+# Get only access grant events
+events = events_api.events(event_type_filter="access_granted")
+```
+
+### Filter by Date Range and Type
+
+```python
+from datetime import datetime, timedelta
+
+# Get login events from the last 24 hours
+end_date = datetime.now().isoformat()
+start_date = (datetime.now() - timedelta(days=1)).isoformat()
+
+events = events_api.events(
+    start_date_filter=start_date,
+    end_date_filter=end_date,
+    event_type_filter="user_login",
+    page_size=200
+)
+```
+
+### Paginate Through All Events
+
+```python
+events_api = EventsApi()
+
+all_events = []
+cursor = None
+
+while True:
+    result = events_api.events(cursor=cursor, page_size=200)
+    all_events.extend(result.results)
+    
+    if not result.next:
+        break
+    
+    cursor = result.next
+
+print(f"Total events retrieved: {len(all_events)}")
+```
+
+## Related Models
+
+- `PaginatedEventList` - The paginated response containing Event objects
+- `Event` - Individual event object with details about the action

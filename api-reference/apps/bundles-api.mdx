@@ -1,0 +1,646 @@
+---
+title: "BundlesApi"
+description: "API reference for the BundlesApi class in the Opal Python SDK"
+---
+
+## Overview
+
+The `BundlesApi` class provides methods for managing bundles in Opal. Bundles are collections of resources and groups that can be requested together. Use this API to create, retrieve, update, and delete bundles, as well as manage their associated resources and groups.
+
+## Class Definition
+
+```python
+from opal_security.api import BundlesApi
+
+api = BundlesApi()
+```
+
+## Bundle Management
+
+### create_bundle
+
+Creates a new bundle.
+
+```python
+create_bundle(
+    create_bundle_info: CreateBundleInfo,
+    _request_timeout: Optional[float] = None
+) -> Bundle
+```
+
+<ParamField path="create_bundle_info" type="CreateBundleInfo" required>
+  Information needed to create a bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `Bundle` - The created bundle object.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateBundleInfo
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_info = CreateBundleInfo(
+    name="Engineering Bundle",
+    description="Resources for engineering team"
+)
+
+bundle = client.bundles.create_bundle(create_bundle_info=bundle_info)
+print(f"Created bundle: {bundle.name}")
+```
+
+---
+
+### get_bundle
+
+Retrieves a bundle by its ID.
+
+```python
+get_bundle(
+    bundle_id: UUID,
+    _request_timeout: Optional[float] = None
+) -> Bundle
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `Bundle` - A Bundle object.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+bundle = client.bundles.get_bundle(bundle_id=bundle_id)
+
+print(f"Bundle Name: {bundle.name}")
+```
+
+---
+
+### get_bundles
+
+Retrieves a paginated list of bundles.
+
+```python
+get_bundles(
+    page_size: Optional[int] = None,
+    cursor: Optional[str] = None,
+    contains: Optional[str] = None,
+    _request_timeout: Optional[float] = None
+) -> PaginatedBundleList
+```
+
+<ParamField path="page_size" type="int">
+  The maximum number of bundles to return. Default is 200, max is 1000.
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  A cursor indicating where to start fetching items after a specific point.
+</ParamField>
+
+<ParamField path="contains" type="str">
+  A filter for the bundle name.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `PaginatedBundleList` - A paginated list of Bundle objects.
+
+**Example:**
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get first page of bundles
+bundles = client.bundles.get_bundles(page_size=50)
+
+for bundle in bundles.results:
+    print(f"Bundle: {bundle.name}")
+
+# Get next page
+if bundles.next:
+    next_bundles = client.bundles.get_bundles(cursor=bundles.next)
+```
+
+---
+
+### update_bundle
+
+Updates an existing bundle.
+
+```python
+update_bundle(
+    bundle_id: UUID,
+    bundle: Bundle,
+    _request_timeout: Optional[float] = None
+) -> Bundle
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle to be updated.
+</ParamField>
+
+<ParamField path="bundle" type="Bundle" required>
+  The bundle object with updated information.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `Bundle` - The updated bundle object.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+bundle = client.bundles.get_bundle(bundle_id=bundle_id)
+
+bundle.description = "Updated description"
+updated_bundle = client.bundles.update_bundle(
+    bundle_id=bundle_id,
+    bundle=bundle
+)
+```
+
+---
+
+### delete_bundle
+
+Deletes a bundle.
+
+```python
+delete_bundle(
+    bundle_id: UUID,
+    _request_timeout: Optional[float] = None
+) -> None
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `None`
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+client.bundles.delete_bundle(bundle_id=bundle_id)
+```
+
+---
+
+## Resource Management
+
+### add_bundle_resource
+
+Adds a resource to a bundle.
+
+```python
+add_bundle_resource(
+    bundle_id: UUID,
+    add_bundle_resource_request: Optional[AddBundleResourceRequest] = None,
+    _request_timeout: Optional[float] = None
+) -> BundleResource
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="add_bundle_resource_request" type="AddBundleResourceRequest">
+  The resource information to add to the bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `BundleResource` - The created bundle resource.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from opal_security.models import AddBundleResourceRequest
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+resource_id = UUID("987e6543-e21b-12d3-a456-426614174000")
+
+request = AddBundleResourceRequest(
+    resource_id=resource_id,
+    access_level_remote_id="viewer"
+)
+
+bundle_resource = client.bundles.add_bundle_resource(
+    bundle_id=bundle_id,
+    add_bundle_resource_request=request
+)
+```
+
+---
+
+### get_bundle_resources
+
+Retrieves a paginated list of resources in a bundle.
+
+```python
+get_bundle_resources(
+    bundle_id: UUID,
+    page_size: Optional[int] = None,
+    cursor: Optional[str] = None,
+    _request_timeout: Optional[float] = None
+) -> PaginatedBundleResourceList
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  The maximum number of resources to return. Default is 200, max is 1000.
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  A cursor indicating where to start fetching items after a specific point.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `PaginatedBundleResourceList` - A paginated list of Resource objects.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+resources = client.bundles.get_bundle_resources(bundle_id=bundle_id)
+
+for resource in resources.results:
+    print(f"Resource: {resource.name}")
+```
+
+---
+
+### remove_bundle_resource
+
+Removes a resource from a bundle.
+
+```python
+remove_bundle_resource(
+    bundle_id: UUID,
+    resource_id: UUID,
+    access_level_remote_id: Optional[str] = None,
+    _request_timeout: Optional[float] = None
+) -> None
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to remove.
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level to grant. If omitted, the default access level remote ID value (empty string) is used.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `None`
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+resource_id = UUID("987e6543-e21b-12d3-a456-426614174000")
+
+client.bundles.remove_bundle_resource(
+    bundle_id=bundle_id,
+    resource_id=resource_id
+)
+```
+
+---
+
+## Group Management
+
+### add_bundle_group
+
+Adds a group to a bundle.
+
+```python
+add_bundle_group(
+    bundle_id: UUID,
+    add_bundle_group_request: AddBundleGroupRequest,
+    _request_timeout: Optional[float] = None
+) -> BundleGroup
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="add_bundle_group_request" type="AddBundleGroupRequest" required>
+  The group information to add to the bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `BundleGroup` - The created bundle group.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from opal_security.models import AddBundleGroupRequest
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+group_id = UUID("987e6543-e21b-12d3-a456-426614174000")
+
+request = AddBundleGroupRequest(
+    group_id=group_id,
+    access_level_remote_id="member"
+)
+
+bundle_group = client.bundles.add_bundle_group(
+    bundle_id=bundle_id,
+    add_bundle_group_request=request
+)
+```
+
+---
+
+### get_bundle_groups
+
+Retrieves a paginated list of groups in a bundle.
+
+```python
+get_bundle_groups(
+    bundle_id: UUID,
+    page_size: Optional[int] = None,
+    cursor: Optional[str] = None,
+    _request_timeout: Optional[float] = None
+) -> PaginatedBundleGroupList
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  The maximum number of groups to return. Default is 200, max is 1000.
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  A cursor indicating where to start fetching items after a specific point.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `PaginatedBundleGroupList` - A paginated list of Group objects.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+groups = client.bundles.get_bundle_groups(bundle_id=bundle_id)
+
+for group in groups.results:
+    print(f"Group: {group.name}")
+```
+
+---
+
+### remove_bundle_group
+
+Removes a group from a bundle.
+
+```python
+remove_bundle_group(
+    bundle_id: UUID,
+    group_id: UUID,
+    access_level_remote_id: Optional[str] = None,
+    _request_timeout: Optional[float] = None
+) -> None
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group to remove.
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level to remove.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `None`
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+group_id = UUID("987e6543-e21b-12d3-a456-426614174000")
+
+client.bundles.remove_bundle_group(
+    bundle_id=bundle_id,
+    group_id=group_id
+)
+```
+
+---
+
+## Visibility Management
+
+### get_bundle_visibility
+
+Gets the visibility settings of a bundle.
+
+```python
+get_bundle_visibility(
+    bundle_id: UUID,
+    _request_timeout: Optional[float] = None
+) -> VisibilityInfo
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `VisibilityInfo` - The visibility information for the bundle.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+visibility = client.bundles.get_bundle_visibility(bundle_id=bundle_id)
+
+print(f"Visibility: {visibility}")
+```
+
+---
+
+### set_bundle_visibility
+
+Sets the visibility settings of a bundle.
+
+```python
+set_bundle_visibility(
+    bundle_id: UUID,
+    visibility_info: VisibilityInfo,
+    _request_timeout: Optional[float] = None
+) -> None
+```
+
+<ParamField path="bundle_id" type="UUID" required>
+  The ID of the bundle.
+</ParamField>
+
+<ParamField path="visibility_info" type="VisibilityInfo" required>
+  The visibility settings to apply.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `None`
+
+**Example:**
+
+```python
+from opal_security import Opal
+from opal_security.models import VisibilityInfo
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+visibility = VisibilityInfo(
+    # Set visibility properties
+)
+
+client.bundles.set_bundle_visibility(
+    bundle_id=bundle_id,
+    visibility_info=visibility
+)
+```
+
+---
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object containing both the response data and HTTP metadata (status code, headers, etc.).
+
+### Example:
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+bundle_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+response = client.bundles.get_bundle_with_http_info(bundle_id=bundle_id)
+
+print(f"Status Code: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Bundle: {response.data}")
+```
+
+---
+
+## Related
+
+- [Apps API](/api-reference/apps/apps-api)
+- [Groups API](/api-reference/groups/groups-api)
+- [Resources API](/api-reference/resources/resources-api)
+- [API Reference Introduction](/api-reference/introduction)

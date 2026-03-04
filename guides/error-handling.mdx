@@ -1,0 +1,495 @@
+---
+title: "Error Handling"
+description: "Learn how to handle errors and exceptions when using the Opal Python SDK"
+---
+
+Proper error handling is essential for building robust applications with the Opal SDK. This guide covers the exception hierarchy, common error scenarios, and best practices for handling errors.
+
+## Exception Hierarchy
+
+The Opal SDK provides a comprehensive exception hierarchy for handling different types of errors:
+
+```python
+from opal_security.exceptions import (
+    OpenApiException,        # Base exception
+    ApiException,            # General API errors
+    BadRequestException,     # HTTP 400
+    UnauthorizedException,   # HTTP 401
+    ForbiddenException,      # HTTP 403
+    NotFoundException,       # HTTP 404
+    ConflictException,       # HTTP 409
+    UnprocessableEntityException,  # HTTP 422
+    ServiceException,        # HTTP 5xx
+    ApiTypeError,            # Type validation errors
+    ApiValueError,           # Value validation errors
+    ApiAttributeError,       # Attribute errors
+    ApiKeyError              # Key errors
+)
+```
+
+## Basic Error Handling
+
+<Steps>
+  <Step title="Catch specific exceptions">
+    Always catch and handle specific exceptions for better error management:
+
+    ```python
+    from opal_security import Opal
+    from opal_security.exceptions import (
+        NotFoundException,
+        UnauthorizedException,
+        ApiException
+    )
+    from uuid import UUID
+
+    client = Opal(api_key="YOUR_API_KEY")
+
+    try:
+        user = client.users.user(
+            user_id=UUID("123e4567-e89b-12d3-a456-426614174000")
+        )
+        print(f"Found user: {user.name}")
+
+    except NotFoundException as e:
+        print(f"User not found: {e}")
+        # Handle missing user
+
+    except UnauthorizedException as e:
+        print(f"Authentication failed: {e}")
+        # Handle invalid credentials
+
+    except ApiException as e:
+        print(f"API error: {e}")
+        print(f"Status code: {e.status}")
+        print(f"Response body: {e.body}")
+    ```
+  </Step>
+
+  <Step title="Access error details">
+    Exception objects contain detailed information about the error:
+
+    ```python
+    try:
+        resource = client.resources.get_resource(
+            resource_id=UUID("invalid-uuid")
+        )
+    except ApiException as e:
+        print(f"Status Code: {e.status}")
+        print(f"Reason: {e.reason}")
+        print(f"Headers: {e.headers}")
+        print(f"Body: {e.body}")
+        print(f"Data: {e.data}")
+    ```
+  </Step>
+</Steps>
+
+## Common Error Scenarios
+
+### Authentication Errors (401)
+
+```python
+from opal_security.exceptions import UnauthorizedException
+
+try:
+    users = client.users.get_users()
+except UnauthorizedException as e:
+    print("Invalid or expired API key")
+    # Log the error and notify administrators
+    # Attempt to refresh credentials if applicable
+```
+
+### Authorization Errors (403)
+
+```python
+from opal_security.exceptions import ForbiddenException
+
+try:
+    resource = client.resources.delete_resource(
+        resource_id=resource_id
+    )
+except ForbiddenException as e:
+    print("Insufficient permissions to delete this resource")
+    # Log the attempted action
+    # Inform the user they lack necessary permissions
+```
+
+### Not Found Errors (404)
+
+```python
+from opal_security.exceptions import NotFoundException
+
+def get_user_safely(client, user_id):
+    """
+    Safely retrieve a user, returning None if not found.
+    """
+    try:
+        return client.users.user(user_id=user_id)
+    except NotFoundException:
+        return None
+
+# Usage
+user = get_user_safely(client, user_id)
+if user:
+    print(f"User found: {user.name}")
+else:
+    print("User does not exist")
+```
+
+### Bad Request Errors (400)
+
+```python
+from opal_security.exceptions import BadRequestException
+
+try:
+    # Invalid duration value
+    resource_user = client.resources.add_resource_user(
+        resource_id=resource_id,
+        user_id=user_id,
+        duration_minutes=999999  # Exceeds maximum
+    )
+except BadRequestException as e:
+    print(f"Invalid request: {e.body}")
+    # Parse error message for specific validation failures
+    # Adjust parameters and retry
+```
+
+### Conflict Errors (409)
+
+```python
+from opal_security.exceptions import ConflictException
+
+try:
+    # Attempt to add user who already has access
+    resource_user = client.resources.add_resource_user(
+        resource_id=resource_id,
+        user_id=user_id
+    )
+except ConflictException as e:
+    print("User already has access to this resource")
+    # Update existing access instead of creating new
+```
+
+### Unprocessable Entity Errors (422)
+
+```python
+from opal_security.exceptions import UnprocessableEntityException
+
+try:
+    group = client.groups.create_group(
+        create_group_info=group_info
+    )
+except UnprocessableEntityException as e:
+    print(f"Validation failed: {e.body}")
+    # Review the error details to fix validation issues
+```
+
+### Server Errors (5xx)
+
+```python
+from opal_security.exceptions import ServiceException
+import time
+
+def retry_on_server_error(func, max_retries=3, delay=1):
+    """
+    Retry a function if it encounters server errors.
+    """
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except ServiceException as e:
+            if attempt < max_retries - 1:
+                print(f"Server error, retrying in {delay}s...")
+                time.sleep(delay)
+                delay *= 2  # Exponential backoff
+            else:
+                print("Max retries reached")
+                raise
+
+# Usage
+users = retry_on_server_error(
+    lambda: client.users.get_users()
+)
+```
+
+## Validation Errors
+
+### Type Errors
+
+```python
+from opal_security.exceptions import ApiTypeError
+
+try:
+    # Passing wrong type
+    user = client.users.user(user_id="not-a-uuid")
+except ApiTypeError as e:
+    print(f"Type error: {e}")
+    print(f"Expected types: {e.valid_classes}")
+    print(f"Path to item: {e.path_to_item}")
+```
+
+### Value Errors
+
+```python
+from opal_security.exceptions import ApiValueError
+
+try:
+    # Invalid value
+    users = client.users.get_users(page_size=2000)  # Exceeds max
+except ApiValueError as e:
+    print(f"Value error: {e}")
+    print(f"Path to item: {e.path_to_item}")
+```
+
+## Complete Error Handling Pattern
+
+<CodeGroup>
+
+```python Comprehensive Handler
+from opal_security.exceptions import (
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ConflictException,
+    UnprocessableEntityException,
+    ServiceException,
+    ApiException
+)
+import logging
+
+logger = logging.getLogger(__name__)
+
+def safe_api_call(func, *args, **kwargs):
+    """
+    Execute an API call with comprehensive error handling.
+    """
+    try:
+        return func(*args, **kwargs)
+
+    except BadRequestException as e:
+        logger.error(f"Bad request: {e.body}")
+        return {"error": "invalid_request", "message": str(e)}
+
+    except UnauthorizedException as e:
+        logger.error("Authentication failed")
+        return {"error": "unauthorized", "message": "Invalid credentials"}
+
+    except ForbiddenException as e:
+        logger.error("Insufficient permissions")
+        return {"error": "forbidden", "message": "Access denied"}
+
+    except NotFoundException as e:
+        logger.warning(f"Resource not found: {e}")
+        return {"error": "not_found", "message": "Resource not found"}
+
+    except ConflictException as e:
+        logger.warning(f"Conflict: {e.body}")
+        return {"error": "conflict", "message": str(e)}
+
+    except UnprocessableEntityException as e:
+        logger.error(f"Validation failed: {e.body}")
+        return {"error": "validation_error", "message": str(e)}
+
+    except ServiceException as e:
+        logger.error(f"Server error: {e.status}")
+        return {"error": "server_error", "message": "Service temporarily unavailable"}
+
+    except ApiException as e:
+        logger.error(f"API error: {e}")
+        return {"error": "api_error", "message": str(e)}
+
+# Usage
+result = safe_api_call(
+    client.users.user,
+    user_id=user_id
+)
+
+if isinstance(result, dict) and "error" in result:
+    print(f"Error: {result['message']}")
+else:
+    print(f"Success: {result.name}")
+```
+
+```python Retry with Backoff
+import time
+from opal_security.exceptions import ServiceException, ApiException
+
+def retry_with_exponential_backoff(
+    func,
+    max_retries=3,
+    initial_delay=1,
+    max_delay=60,
+    backoff_factor=2
+):
+    """
+    Retry a function with exponential backoff.
+    """
+    delay = initial_delay
+
+    for attempt in range(max_retries):
+        try:
+            return func()
+
+        except ServiceException as e:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1} failed, retrying in {delay}s")
+                time.sleep(delay)
+                delay = min(delay * backoff_factor, max_delay)
+            else:
+                raise
+
+        except ApiException as e:
+            # Don't retry client errors (4xx)
+            if e.status and 400 <= e.status < 500:
+                raise
+            # Retry server errors
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1} failed, retrying in {delay}s")
+                time.sleep(delay)
+                delay = min(delay * backoff_factor, max_delay)
+            else:
+                raise
+
+# Usage
+users = retry_with_exponential_backoff(
+    lambda: client.users.get_users(page_size=100)
+)
+```
+
+```python Context Manager
+from contextlib import contextmanager
+from opal_security.exceptions import ApiException
+import logging
+
+logger = logging.getLogger(__name__)
+
+@contextmanager
+def api_error_handler(operation_name):
+    """
+    Context manager for handling API errors.
+    """
+    try:
+        yield
+    except ApiException as e:
+        logger.error(
+            f"Error in {operation_name}: {e.status} - {e.reason}",
+            extra={
+                "status": e.status,
+                "body": e.body,
+                "operation": operation_name
+            }
+        )
+        raise
+
+# Usage
+with api_error_handler("get_user"):
+    user = client.users.user(user_id=user_id)
+    print(f"User: {user.name}")
+```
+
+</CodeGroup>
+
+## Logging Best Practices
+
+```python
+import logging
+from opal_security.exceptions import ApiException
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+try:
+    resource = client.resources.create_resource(
+        create_resource_info=resource_info
+    )
+    logger.info(f"Created resource: {resource.resource_id}")
+
+except ApiException as e:
+    logger.error(
+        "Failed to create resource",
+        extra={
+            "status_code": e.status,
+            "reason": e.reason,
+            "body": e.body,
+            "resource_name": resource_info.name
+        },
+        exc_info=True
+    )
+```
+
+## Timeout Handling
+
+```python
+from opal_security.exceptions import ApiException
+import socket
+
+try:
+    # Set custom timeout (connection, read)
+    users = client.users.get_users(
+        _request_timeout=(5, 30)  # 5s connection, 30s read
+    )
+except socket.timeout:
+    print("Request timed out")
+    # Implement retry logic or notify user
+except ApiException as e:
+    print(f"API error: {e}")
+```
+
+## Best Practices
+
+1. **Catch specific exceptions**: Always catch the most specific exception type possible.
+
+2. **Log errors appropriately**: Use proper logging levels (ERROR for failures, WARNING for expected issues).
+
+3. **Provide context**: Include relevant information in error logs (user IDs, resource IDs, etc.).
+
+4. **Implement retries**: Use exponential backoff for transient errors.
+
+5. **Don't swallow exceptions**: Always log or handle errors; never silently ignore them.
+
+6. **Validate input early**: Check parameters before making API calls to avoid validation errors.
+
+7. **Handle rate limits**: Implement backoff strategies for rate limit errors.
+
+8. **Monitor errors**: Track error rates and patterns to identify systemic issues.
+
+<Warning>
+Never expose detailed error messages to end users as they may contain sensitive information. Log full details internally and show generic messages to users.
+</Warning>
+
+## Testing Error Handling
+
+```python
+import pytest
+from opal_security.exceptions import NotFoundException
+from uuid import UUID
+
+def test_user_not_found(client):
+    """
+    Test handling of missing users.
+    """
+    with pytest.raises(NotFoundException):
+        client.users.user(
+            user_id=UUID("00000000-0000-0000-0000-000000000000")
+        )
+
+def test_invalid_page_size(client):
+    """
+    Test handling of invalid parameters.
+    """
+    from opal_security.exceptions import ApiValueError
+
+    with pytest.raises(ApiValueError):
+        client.users.get_users(page_size=2000)
+```
+
+## Related Resources
+
+- [Managing Users](/guides/managing-users)
+- [Managing Groups](/guides/managing-groups)
+- [Managing Resources](/guides/managing-resources)
+- [Access Requests](/guides/access-requests)

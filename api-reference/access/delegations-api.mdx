@@ -1,0 +1,310 @@
+---
+title: "DelegationsApi"
+description: "API reference for managing request reviewer delegations in the Opal Python SDK"
+---
+
+## Overview
+
+The `DelegationsApi` class provides methods for managing request reviewer delegations in Opal. Delegations allow you to delegate access review requests from one user to another.
+
+## Initialization
+
+```python
+from opal_security import ApiClient
+from opal_security.api import DelegationsApi
+
+# Initialize with default client
+api = DelegationsApi()
+
+# Or with custom client
+client = ApiClient()
+api = DelegationsApi(api_client=client)
+```
+
+## Methods
+
+### create_delegation
+
+Create a new request reviewer delegation.
+
+```python
+def create_delegation(
+    create_delegation_request: CreateDelegationRequest,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> Delegation
+```
+
+<ParamField path="create_delegation_request" type="CreateDelegationRequest" required>
+  Delegation configuration including delegator and delegate user information
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `Delegation` - The created delegation
+
+**HTTP Method:** `POST /delegations`
+
+**Example:**
+```python
+from opal_security.models import CreateDelegationRequest
+from uuid import UUID
+
+delegation_request = CreateDelegationRequest(
+    # Configure delegation
+)
+
+delegation = api.create_delegation(
+    create_delegation_request=delegation_request
+)
+print(f"Delegation created with ID: {delegation.id}")
+```
+
+---
+
+### get_delegation
+
+Retrieve a specific delegation by its ID.
+
+```python
+def get_delegation(
+    delegation_id: UUID,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> Delegation
+```
+
+<ParamField path="delegation_id" type="UUID" required>
+  The ID of the delegation to retrieve
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `Delegation` - The delegation object
+
+**HTTP Method:** `GET /delegations/{delegation_id}`
+
+**Example:**
+```python
+from uuid import UUID
+
+delegation_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+delegation = api.get_delegation(delegation_id=delegation_id)
+
+print(f"Delegator: {delegation.delegator_user_id}")
+print(f"Delegate: {delegation.delegate_user_id}")
+```
+
+---
+
+### get_delegations
+
+Retrieve a list of request reviewer delegations with optional filtering.
+
+```python
+def get_delegations(
+    delegator_user_id: Optional[UUID] = None,
+    delegate_user_id: Optional[UUID] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> PaginatedDelegationsList
+```
+
+<ParamField path="delegator_user_id" type="UUID">
+  Filter delegations by the user delegating their access review requests
+</ParamField>
+
+<ParamField path="delegate_user_id" type="UUID">
+  Filter delegations by the user being delegated to
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  Pagination cursor to indicate where to start fetching results
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Maximum number of results to return per page (max 1000, default 200)
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `PaginatedDelegationsList` - Paginated list of delegations
+
+**HTTP Method:** `GET /delegations`
+
+**Example:**
+```python
+from uuid import UUID
+
+# Get all delegations
+delegations = api.get_delegations(page_size=50)
+
+for delegation in delegations.results:
+    print(f"Delegation {delegation.id}")
+
+# Get delegations for a specific delegator
+user_delegations = api.get_delegations(
+    delegator_user_id=UUID("user-id-here")
+)
+
+print(f"Found {len(user_delegations.results)} delegations")
+
+# Paginate through results
+next_cursor = delegations.next_cursor
+if next_cursor:
+    next_page = api.get_delegations(
+        cursor=next_cursor,
+        page_size=50
+    )
+```
+
+---
+
+### delete_delegation
+
+Delete a delegation by its ID.
+
+```python
+def delete_delegation(
+    delegation_id: UUID,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> None
+```
+
+<ParamField path="delegation_id" type="UUID" required>
+  The ID of the delegation to remove
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `None`
+
+**HTTP Method:** `DELETE /delegations/{delegation_id}`
+
+**Example:**
+```python
+from uuid import UUID
+
+delegation_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+api.delete_delegation(delegation_id=delegation_id)
+print("Delegation deleted successfully")
+```
+
+---
+
+## Complete Example
+
+Here's a complete example showing the delegation workflow:
+
+```python
+from opal_security import ApiClient
+from opal_security.api import DelegationsApi
+from opal_security.models import CreateDelegationRequest
+from uuid import UUID
+
+# Initialize the API
+api = DelegationsApi()
+
+# Create a new delegation
+delegation_request = CreateDelegationRequest(
+    # delegator_user_id=UUID("user-1"),
+    # delegate_user_id=UUID("user-2")
+)
+
+new_delegation = api.create_delegation(
+    create_delegation_request=delegation_request
+)
+print(f"Created delegation: {new_delegation.id}")
+
+# Retrieve the delegation
+retrieved = api.get_delegation(delegation_id=new_delegation.id)
+print(f"Delegator: {retrieved.delegator_user_id}")
+print(f"Delegate: {retrieved.delegate_user_id}")
+
+# List all delegations for a user
+user_id = UUID("user-id-here")
+delegations = api.get_delegations(
+    delegator_user_id=user_id
+)
+
+print(f"User has {len(delegations.results)} delegations")
+
+# Delete the delegation
+api.delete_delegation(delegation_id=new_delegation.id)
+print("Delegation removed")
+```
+
+## Filtering Examples
+
+```python
+from uuid import UUID
+
+# Get all delegations where a specific user is the delegator
+delegator_delegations = api.get_delegations(
+    delegator_user_id=UUID("delegator-user-id")
+)
+
+# Get all delegations where a specific user is the delegate
+delegate_delegations = api.get_delegations(
+    delegate_user_id=UUID("delegate-user-id")
+)
+
+# Combine filters
+specific_delegations = api.get_delegations(
+    delegator_user_id=UUID("delegator-user-id"),
+    delegate_user_id=UUID("delegate-user-id")
+)
+```
+
+## HTTP Info Variants
+
+All methods have `_with_http_info` variants that return an `ApiResponse` object containing the response data along with HTTP headers and status code:
+
+```python
+response = api.get_delegation_with_http_info(
+    delegation_id=delegation_id
+)
+print(f"Status: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+## Without Preload Content
+
+You can also use `_without_preload_content` variants to get the raw HTTP response without deserializing the response body:
+
+```python
+raw_response = api.get_delegation_without_preload_content(
+    delegation_id=delegation_id
+)
+# Returns RESTResponseType
+```
+
+## Error Handling
+
+```python
+from opal_security.exceptions import ApiException
+
+try:
+    delegation = api.get_delegation(delegation_id=delegation_id)
+except ApiException as e:
+    if e.status == 404:
+        print("Delegation not found")
+    else:
+        print(f"API error: {e.status} - {e.reason}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+```
+
+## Related Resources
+
+- [Delegations Overview](/concepts/delegations)
+- [Request Management](/api-reference/access/requests-api)
+- [User Management](/api-reference/users/users-api)

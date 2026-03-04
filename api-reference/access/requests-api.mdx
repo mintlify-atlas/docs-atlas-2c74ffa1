@@ -1,0 +1,396 @@
+---
+title: "RequestsApi"
+description: "API reference for managing access requests in the Opal Python SDK"
+---
+
+## Overview
+
+The `RequestsApi` class provides methods for managing access requests in Opal. This includes creating, retrieving, approving, denying, and commenting on access requests.
+
+## Initialization
+
+```python
+from opal_security import ApiClient
+from opal_security.api import RequestsApi
+
+# Initialize with default client
+api = RequestsApi()
+
+# Or with custom client
+client = ApiClient()
+api = RequestsApi(api_client=client)
+```
+
+## Methods
+
+### create_request
+
+Create a new access request.
+
+```python
+def create_request(
+    create_request_info: CreateRequestInfo,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> CreateRequest200Response
+```
+
+<ParamField path="create_request_info" type="CreateRequestInfo" required>
+  Request information including the resources to be accessed
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `CreateRequest200Response` - The created request details
+
+**Example:**
+```python
+from opal_security.models import CreateRequestInfo
+
+request_info = CreateRequestInfo(
+    # Configure request details
+)
+
+response = api.create_request(create_request_info=request_info)
+print(f"Request created with ID: {response.id}")
+```
+
+---
+
+### get_request
+
+Retrieve a specific access request by ID.
+
+```python
+def get_request(
+    id: UUID,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> Request
+```
+
+<ParamField path="id" type="UUID" required>
+  The ID of the request to retrieve
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `Request` - The request object
+
+**Example:**
+```python
+from uuid import UUID
+
+request_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+request = api.get_request(id=request_id)
+print(f"Request status: {request.status}")
+```
+
+---
+
+### get_requests
+
+Retrieve a list of access requests with optional filtering.
+
+```python
+def get_requests(
+    start_date_filter: Optional[str] = None,
+    end_date_filter: Optional[str] = None,
+    requester_id: Optional[UUID] = None,
+    target_user_id: Optional[UUID] = None,
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None,
+    show_pending_only: Optional[bool] = None,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> RequestList
+```
+
+<ParamField path="start_date_filter" type="str">
+  Start date filter for requests
+</ParamField>
+
+<ParamField path="end_date_filter" type="str">
+  End date filter for requests
+</ParamField>
+
+<ParamField path="requester_id" type="UUID">
+  Filter requests by requester user ID
+</ParamField>
+
+<ParamField path="target_user_id" type="UUID">
+  Filter requests by target user ID
+</ParamField>
+
+<ParamField path="cursor" type="str">
+  Pagination cursor value
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page (max 1000, default 200)
+</ParamField>
+
+<ParamField path="show_pending_only" type="bool">
+  Only show pending requests
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `RequestList` - List of requests visible to the admin
+
+**Example:**
+```python
+# Get all pending requests
+requests = api.get_requests(
+    show_pending_only=True,
+    page_size=50
+)
+
+for request in requests.results:
+    print(f"Request {request.id}: {request.status}")
+
+# Get requests for a specific user
+user_requests = api.get_requests(
+    requester_id=UUID("user-id-here"),
+    start_date_filter="2024-01-01"
+)
+```
+
+---
+
+### approve_request
+
+Approve an access request.
+
+```python
+def approve_request(
+    id: UUID,
+    approve_request_request: ApproveRequestRequest,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> ApproveRequest200Response
+```
+
+<ParamField path="id" type="UUID" required>
+  The ID of the request to approve
+</ParamField>
+
+<ParamField path="approve_request_request" type="ApproveRequestRequest" required>
+  Approval parameters including optional message and duration
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `ApproveRequest200Response` - The approved request details
+
+**Example:**
+```python
+from opal_security.models import ApproveRequestRequest
+
+approval = ApproveRequestRequest(
+    # Configure approval parameters
+)
+
+response = api.approve_request(
+    id=UUID("request-id-here"),
+    approve_request_request=approval
+)
+print("Request approved successfully")
+```
+
+---
+
+### deny_request
+
+Deny an access request.
+
+```python
+def deny_request(
+    id: UUID,
+    deny_request_request: DenyRequestRequest,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> ApproveRequest200Response
+```
+
+<ParamField path="id" type="UUID" required>
+  The ID of the request to deny
+</ParamField>
+
+<ParamField path="deny_request_request" type="DenyRequestRequest" required>
+  Denial parameters including optional reason message
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `ApproveRequest200Response` - The denied request details
+
+**Example:**
+```python
+from opal_security.models import DenyRequestRequest
+
+denial = DenyRequestRequest(
+    # Configure denial parameters
+)
+
+response = api.deny_request(
+    id=UUID("request-id-here"),
+    deny_request_request=denial
+)
+print("Request denied")
+```
+
+---
+
+### create_request_comment
+
+Add a comment to an access request.
+
+```python
+def create_request_comment(
+    id: UUID,
+    create_request_comment_request: CreateRequestCommentRequest,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> ApproveRequest200Response
+```
+
+<ParamField path="id" type="UUID" required>
+  The ID of the request to comment on
+</ParamField>
+
+<ParamField path="create_request_comment_request" type="CreateRequestCommentRequest" required>
+  Comment parameters including the comment text
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `ApproveRequest200Response` - The updated request details
+
+**Example:**
+```python
+from opal_security.models import CreateRequestCommentRequest
+
+comment = CreateRequestCommentRequest(
+    # Configure comment
+)
+
+response = api.create_request_comment(
+    id=UUID("request-id-here"),
+    create_request_comment_request=comment
+)
+```
+
+---
+
+### get_request_comments
+
+Retrieve all comments for a specific request.
+
+```python
+def get_request_comments(
+    id: UUID,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> RequestCommentList
+```
+
+<ParamField path="id" type="UUID" required>
+  The ID of the request to get comments for
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `RequestCommentList` - List of comments on the request
+
+**Example:**
+```python
+comments = api.get_request_comments(id=UUID("request-id-here"))
+
+for comment in comments.results:
+    print(f"Comment by {comment.author}: {comment.text}")
+```
+
+---
+
+### get_requests_relay
+
+<Warning>This method is deprecated. Use `get_requests` instead.</Warning>
+
+Retrieve requests using Relay-style cursor pagination.
+
+```python
+def get_requests_relay(
+    first: Optional[int] = None,
+    after: Optional[str] = None,
+    last: Optional[int] = None,
+    before: Optional[str] = None,
+    status: Optional[RequestStatusEnum] = None,
+    to: Optional[UUID] = None,
+    var_from: Optional[UUID] = None,
+    _request_timeout: Optional[Union[float, Tuple[float, float]]] = None
+) -> RequestConnection
+```
+
+<ParamField path="first" type="int">
+  Number of results after cursor (1-100)
+</ParamField>
+
+<ParamField path="after" type="str">
+  Cursor for forward pagination
+</ParamField>
+
+<ParamField path="last" type="int">
+  Number of results before cursor (1-100)
+</ParamField>
+
+<ParamField path="before" type="str">
+  Cursor for backward pagination
+</ParamField>
+
+<ParamField path="status" type="RequestStatusEnum">
+  Filter by request status
+</ParamField>
+
+<ParamField path="to" type="UUID">
+  Filter requests assigned to a specific user
+</ParamField>
+
+<ParamField path="var_from" type="UUID">
+  Filter requests made by a specific user
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for this request in seconds
+</ParamField>
+
+**Returns:** `RequestConnection` - Relay-style paginated request list
+
+## HTTP Info Variants
+
+All methods have `_with_http_info` variants that return an `ApiResponse` object containing the response data along with HTTP headers and status code:
+
+```python
+response = api.get_request_with_http_info(id=request_id)
+print(f"Status: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+## Error Handling
+
+```python
+try:
+    request = api.get_request(id=request_id)
+except ApiException as e:
+    print(f"API error: {e.status} - {e.reason}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+```

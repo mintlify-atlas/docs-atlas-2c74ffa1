@@ -1,0 +1,440 @@
+---
+title: "OwnersApi"
+description: "Complete reference for the OwnersApi class in the Opal Python SDK"
+---
+
+The `OwnersApi` class provides methods to manage owners in Opal.
+
+## Constructor
+
+```python
+from opal_security import ApiClient
+from opal_security.api import OwnersApi
+
+api_client = ApiClient()
+api = OwnersApi(api_client)
+```
+
+<ParamField path="api_client" type="ApiClient" default="ApiClient.get_default()">
+  Optional API client instance. If not provided, uses the default client.
+</ParamField>
+
+## Methods
+
+### create_owner
+
+Creates an owner.
+
+```python
+owner = api.create_owner(
+    create_owner_info=create_info
+)
+```
+
+#### Parameters
+
+<ParamField path="create_owner_info" type="CreateOwnerInfo" required>
+  Owner information to create.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Owner` - The created owner object.
+
+#### HTTP Request
+
+`POST /owners`
+
+---
+
+### delete_owner
+
+Deletes an owner.
+
+```python
+api.delete_owner(
+    owner_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="owner_id" type="UUID" required>
+  The ID of the owner to delete.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /owners/{owner_id}`
+
+---
+
+### get_owner
+
+Returns an owner object by ID.
+
+```python
+owner = api.get_owner(
+    owner_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="owner_id" type="UUID" required>
+  The ID of the owner to retrieve.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Owner` - The owner object.
+
+#### HTTP Request
+
+`GET /owners/{owner_id}`
+
+---
+
+### get_owner_from_name
+
+Returns an owner object by name.
+
+<Note>
+This method does not support owners with `/` in their name. Use `get_owners` with the `name` parameter instead.
+</Note>
+
+```python
+owner = api.get_owner_from_name(
+    owner_name="Engineering"
+)
+```
+
+#### Parameters
+
+<ParamField path="owner_name" type="str" required>
+  The name of the owner to retrieve.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Owner` - The owner object.
+
+#### HTTP Request
+
+`GET /owners/name/{owner_name}`
+
+---
+
+### get_owner_users
+
+Gets the list of users for an owner, in escalation priority order if applicable.
+
+```python
+users = api.get_owner_users(
+    owner_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="owner_id" type="UUID" required>
+  The ID of the owner.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`UserList` - A list of users for the owner.
+
+#### HTTP Request
+
+`GET /owners/{owner_id}/users`
+
+---
+
+### get_owners
+
+Returns a list of owner objects.
+
+```python
+owners = api.get_owners(
+    cursor="cursor_value",
+    page_size=100,
+    name="Engineering"
+)
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value for fetching the next page.
+</ParamField>
+
+<ParamField path="page_size" type="int" default="200">
+  Number of results to return per page. Maximum is 1000.
+</ParamField>
+
+<ParamField path="name" type="str">
+  Owner name to filter by.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`PaginatedOwnersList` - A paginated list of owner objects.
+
+#### HTTP Request
+
+`GET /owners`
+
+---
+
+### set_owner_users
+
+Sets the list of users for an owner.
+
+<Info>
+If escalation is enabled, the order of the user list determines the escalation priority order. If the owner has a source group, adding or removing users from this list will not be possible.
+</Info>
+
+```python
+users = api.set_owner_users(
+    owner_id="123e4567-e89b-12d3-a456-426614174000",
+    user_id_list=user_ids
+)
+```
+
+#### Parameters
+
+<ParamField path="owner_id" type="UUID" required>
+  The ID of the owner.
+</ParamField>
+
+<ParamField path="user_id_list" type="UserIDList" required>
+  List of user IDs to set for the owner.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`UserList` - The updated list of users for the owner.
+
+#### HTTP Request
+
+`PUT /owners/{owner_id}/users`
+
+---
+
+### update_owners
+
+Bulk updates a list of owners.
+
+```python
+updated_owners = api.update_owners(
+    update_owner_info_list=update_list
+)
+```
+
+#### Parameters
+
+<ParamField path="update_owner_info_list" type="UpdateOwnerInfoList" required>
+  List of owners to be updated.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`UpdateOwnerInfoList` - The list of updated owners.
+
+#### HTTP Request
+
+`PUT /owners`
+
+---
+
+## HTTP Response Variants
+
+Each method has two additional variants for advanced use cases:
+
+### with_http_info
+
+Returns an `ApiResponse` object containing the response data, HTTP status code, and headers:
+
+```python
+response = api.get_owner_with_http_info(
+    owner_id="123e4567-e89b-12d3-a456-426614174000"
+)
+print(response.data)  # The Owner object
+print(response.status_code)  # HTTP status code
+print(response.headers)  # Response headers
+```
+
+### without_preload_content
+
+Returns the raw HTTP response without deserializing the content:
+
+```python
+raw_response = api.get_owner_without_preload_content(
+    owner_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```

@@ -1,0 +1,179 @@
+---
+title: "AppsApi"
+description: "API reference for the AppsApi class in the Opal Python SDK"
+---
+
+## Overview
+
+The `AppsApi` class provides methods for managing applications in Opal. Use this API to retrieve app information, list apps with filters, and get sync error details.
+
+## Class Definition
+
+```python
+from opal_security.api import AppsApi
+
+api = AppsApi()
+```
+
+## Methods
+
+### get_app
+
+Retrieves an app by its ID.
+
+```python
+get_app(
+    app_id: UUID,
+    _request_timeout: Optional[float] = None
+) -> App
+```
+
+<ParamField path="app_id" type="UUID" required>
+  The ID of the app.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds. Can be a single value for total timeout or a tuple of (connection, read) timeouts.
+</ParamField>
+
+**Returns:** `App` - An App object containing app details.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+app = client.apps.get_app(app_id=app_id)
+
+print(f"App Name: {app.name}")
+print(f"App Type: {app.app_type}")
+```
+
+---
+
+### get_apps
+
+Retrieves a list of apps with optional filtering.
+
+```python
+get_apps(
+    app_type_filter: Optional[List[AppTypeEnum]] = None,
+    owner_filter: Optional[UUID] = None,
+    _request_timeout: Optional[float] = None
+) -> AppsList
+```
+
+<ParamField path="app_type_filter" type="List[AppTypeEnum]">
+  A list of app types to filter by.
+</ParamField>
+
+<ParamField path="owner_filter" type="UUID">
+  An owner ID to filter by.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `AppsList` - A list of App objects.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from opal_security.models import AppTypeEnum
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Get all apps
+all_apps = client.apps.get_apps()
+
+# Get apps filtered by type
+saml_apps = client.apps.get_apps(
+    app_type_filter=[AppTypeEnum.SAML]
+)
+
+for app in saml_apps.results:
+    print(f"App: {app.name}")
+```
+
+---
+
+### get_sync_errors
+
+Retrieves a list of recent sync errors that have occurred since the last successful sync.
+
+```python
+get_sync_errors(
+    app_id: Optional[UUID] = None,
+    resource_id: Optional[UUID] = None,
+    group_id: Optional[UUID] = None,
+    _request_timeout: Optional[float] = None
+) -> List[SyncErrorList]
+```
+
+<ParamField path="app_id" type="UUID">
+  The ID of the app to list sync errors for.
+</ParamField>
+
+<ParamField path="resource_id" type="UUID">
+  The ID of the resource to list sync errors for.
+</ParamField>
+
+<ParamField path="group_id" type="UUID">
+  The ID of the group to list sync errors for.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `List[SyncErrorList]` - A list of sync error objects.
+
+**Example:**
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+errors = client.apps.get_sync_errors(app_id=app_id)
+
+for error_list in errors:
+    print(f"Sync errors: {error_list}")
+```
+
+---
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object containing both the response data and HTTP metadata (status code, headers, etc.).
+
+### Example:
+
+```python
+from opal_security import Opal
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+app_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+response = client.apps.get_app_with_http_info(app_id=app_id)
+
+print(f"Status Code: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"App: {response.data}")
+```
+
+---
+
+## Related
+
+- [Bundles API](/api-reference/apps/bundles-api)
+- [API Reference Introduction](/api-reference/introduction)

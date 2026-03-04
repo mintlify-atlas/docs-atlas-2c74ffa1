@@ -1,0 +1,416 @@
+---
+title: 'GroupBindingsApi'
+description: 'Complete reference for the GroupBindingsApi class in the Opal Python SDK'
+---
+
+## Overview
+
+The `GroupBindingsApi` class provides methods to manage group bindings in the Opal platform. Group bindings define relationships between groups and other entities, enabling you to configure how groups interact with resources and access policies.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+group_bindings_api = client.group_bindings
+```
+
+## Methods
+
+### create_group_binding
+
+Creates a new group binding.
+
+```python
+group_binding = group_bindings_api.create_group_binding(
+    create_group_binding_info=CreateGroupBindingInfo(
+        group_id="550e8400-e29b-41d4-a716-446655440000",
+        resource_id="770e8400-e29b-41d4-a716-446655440000",
+        # additional fields...
+    )
+)
+```
+
+<ParamField path="create_group_binding_info" type="CreateGroupBindingInfo" required>
+  Information about the group binding to create. This includes the group ID, resource details, and binding configuration.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for this request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for this request. Default is 0.
+</ParamField>
+
+<ResponseField name="group_binding" type="GroupBinding">
+  The created group binding object
+</ResponseField>
+
+**HTTP Method:** `POST /group-bindings`
+
+**Returns:** `GroupBinding`
+
+---
+
+### get_group_binding
+
+Retrieves a specific group binding by its ID.
+
+```python
+group_binding = group_bindings_api.get_group_binding(
+    group_binding_id="660e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_binding_id" type="UUID" required>
+  The ID of the group binding to retrieve
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for this request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for this request. Default is 0.
+</ParamField>
+
+<ResponseField name="group_binding" type="GroupBinding">
+  The group binding object containing all binding details
+</ResponseField>
+
+**HTTP Method:** `GET /group-bindings/{group_binding_id}`
+
+**Returns:** `GroupBinding`
+
+---
+
+### get_group_bindings
+
+Retrieves a paginated list of group bindings.
+
+```python
+group_bindings = group_bindings_api.get_group_bindings(
+    cursor=None,
+    page_size=200
+)
+```
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value. Use this to fetch the next page of results. The cursor is returned in the response of the previous page.
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200. Maximum is 1000.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for this request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for this request. Default is 0.
+</ParamField>
+
+<ResponseField name="group_bindings" type="PaginatedGroupBindingsList">
+  A paginated list containing:
+  - `results`: Array of GroupBinding objects
+  - `next_cursor`: Cursor for the next page (if available)
+  - `has_more`: Boolean indicating if more results exist
+</ResponseField>
+
+**HTTP Method:** `GET /group-bindings`
+
+**Returns:** `PaginatedGroupBindingsList`
+
+---
+
+### update_group_bindings
+
+Bulk updates multiple group bindings at once.
+
+```python
+group_bindings_api.update_group_bindings(
+    update_group_binding_info_list=UpdateGroupBindingInfoList(
+        bindings=[
+            UpdateGroupBindingInfo(
+                group_binding_id="660e8400-e29b-41d4-a716-446655440000",
+                # fields to update...
+            ),
+            UpdateGroupBindingInfo(
+                group_binding_id="770e8400-e29b-41d4-a716-446655440000",
+                # fields to update...
+            )
+        ]
+    )
+)
+```
+
+<ParamField path="update_group_binding_info_list" type="UpdateGroupBindingInfoList" required>
+  List of group bindings to be updated. Each item should include the group binding ID and the fields to update.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for this request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for this request. Default is 0.
+</ParamField>
+
+**HTTP Method:** `PUT /group-bindings`
+
+**Returns:** `None`
+
+---
+
+### delete_group_binding
+
+Deletes a specific group binding.
+
+```python
+group_bindings_api.delete_group_binding(
+    group_binding_id="660e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<ParamField path="group_binding_id" type="UUID" required>
+  The ID of the group binding to delete
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single number (total timeout) or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override authentication settings for this request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for this request. Default is 0.
+</ParamField>
+
+**HTTP Method:** `DELETE /group-bindings/{group_binding_id}`
+
+**Returns:** `None`
+
+---
+
+## Advanced Usage
+
+All methods in the `GroupBindingsApi` class support advanced HTTP options for fine-grained control:
+
+### HTTP Variants
+
+Each method has three variants:
+
+1. **Standard method** - Returns the deserialized response data
+   ```python
+   result = group_bindings_api.get_group_binding(group_binding_id)
+   ```
+
+2. **`_with_http_info` method** - Returns an `ApiResponse` object with status code, headers, and data
+   ```python
+   api_response = group_bindings_api.get_group_binding_with_http_info(group_binding_id)
+   print(f"Status: {api_response.status_code}")
+   print(f"Headers: {api_response.headers}")
+   print(f"Data: {api_response.data}")
+   ```
+
+3. **`_without_preload_content` method** - Returns the raw HTTP response without deserialization
+   ```python
+   raw_response = group_bindings_api.get_group_binding_without_preload_content(group_binding_id)
+   print(f"Raw response: {raw_response.data}")
+   ```
+
+### Custom Timeouts
+
+Set custom timeouts for requests:
+
+```python
+# Set a 30-second total timeout
+group_binding = group_bindings_api.get_group_binding(
+    group_binding_id="660e8400-e29b-41d4-a716-446655440000",
+    _request_timeout=30.0
+)
+
+# Set separate connection and read timeouts
+group_binding = group_bindings_api.get_group_binding(
+    group_binding_id="660e8400-e29b-41d4-a716-446655440000",
+    _request_timeout=(5.0, 30.0)  # (connect timeout, read timeout)
+)
+```
+
+### Custom Headers
+
+Add custom headers to a request:
+
+```python
+group_binding = group_bindings_api.get_group_binding(
+    group_binding_id="660e8400-e29b-41d4-a716-446655440000",
+    _headers={"X-Custom-Header": "value"}
+)
+```
+
+## Example Usage
+
+### Basic Operations
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateGroupBindingInfo
+
+# Initialize client
+client = Opal(api_key="your-api-key")
+
+# Create a new group binding
+group_binding = client.group_bindings.create_group_binding(
+    create_group_binding_info=CreateGroupBindingInfo(
+        group_id="550e8400-e29b-41d4-a716-446655440000",
+        resource_id="770e8400-e29b-41d4-a716-446655440000"
+    )
+)
+
+print(f"Created group binding: {group_binding.id}")
+
+# Retrieve the group binding
+retrieved_binding = client.group_bindings.get_group_binding(
+    group_binding_id=group_binding.id
+)
+
+print(f"Retrieved binding for group: {retrieved_binding.group_id}")
+
+# Delete the group binding
+client.group_bindings.delete_group_binding(
+    group_binding_id=group_binding.id
+)
+
+print("Group binding deleted")
+```
+
+### Pagination Example
+
+```python
+# Fetch all group bindings using pagination
+all_bindings = []
+cursor = None
+
+while True:
+    response = client.group_bindings.get_group_bindings(
+        cursor=cursor,
+        page_size=100
+    )
+    
+    all_bindings.extend(response.results)
+    
+    if not response.has_more:
+        break
+    
+    cursor = response.next_cursor
+
+print(f"Total bindings: {len(all_bindings)}")
+```
+
+### Bulk Update Example
+
+```python
+from opal_security.models import UpdateGroupBindingInfo, UpdateGroupBindingInfoList
+
+# Update multiple group bindings at once
+client.group_bindings.update_group_bindings(
+    update_group_binding_info_list=UpdateGroupBindingInfoList(
+        bindings=[
+            UpdateGroupBindingInfo(
+                group_binding_id="660e8400-e29b-41d4-a716-446655440000",
+                # update fields...
+            ),
+            UpdateGroupBindingInfo(
+                group_binding_id="770e8400-e29b-41d4-a716-446655440000",
+                # update fields...
+            )
+        ]
+    )
+)
+
+print("Bulk update completed")
+```
+
+### Error Handling
+
+```python
+from opal_security.exceptions import ApiException
+
+try:
+    group_binding = client.group_bindings.get_group_binding(
+        group_binding_id="invalid-id"
+    )
+except ApiException as e:
+    print(f"API Error: {e.status}")
+    print(f"Reason: {e.reason}")
+    print(f"Body: {e.body}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
+## Related Resources
+
+- [GroupsApi](/api-reference/groups/groups-api) - Manage groups
+- [Group Bindings Guide](https://docs.opal.dev/guides/group-bindings) - Learn more about group bindings
+- [Authentication](https://docs.opal.dev/authentication) - API authentication guide

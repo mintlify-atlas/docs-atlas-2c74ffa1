@@ -1,0 +1,179 @@
+---
+title: "OnCallSchedulesApi"
+description: "API reference for managing on-call schedules in Opal"
+---
+
+The `OnCallSchedulesApi` class provides methods to manage on-call schedules in Opal. On-call schedules are used to determine which users or teams are responsible for handling incidents or requests at specific times.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+on_call_schedules_api = client.on_call_schedules
+```
+
+## Methods
+
+### create_on_call_schedule
+
+Creates an `OnCallSchedule` object.
+
+```python
+def create_on_call_schedule(
+    create_on_call_schedule_info: CreateOnCallScheduleInfo
+) -> OnCallSchedule
+```
+
+<ParamField body="create_on_call_schedule_info" type="CreateOnCallScheduleInfo" required>
+  The `OnCallSchedule` object to be created.
+</ParamField>
+
+**Returns:** `OnCallSchedule` - The created on-call schedule object.
+
+**Example:**
+
+```python
+from opal_security.models import CreateOnCallScheduleInfo
+
+schedule_info = CreateOnCallScheduleInfo(
+    name="Engineering On-Call",
+    # Add additional schedule configuration here
+)
+
+schedule = client.on_call_schedules.create_on_call_schedule(
+    create_on_call_schedule_info=schedule_info
+)
+
+print(f"Schedule created: {schedule.id}")
+```
+
+---
+
+### get_on_call_schedule
+
+Gets an `OnCallSchedule` object by ID.
+
+```python
+def get_on_call_schedule(
+    on_call_schedule_id: UUID
+) -> OnCallSchedule
+```
+
+<ParamField path="on_call_schedule_id" type="UUID" required>
+  The ID of the on-call schedule.
+</ParamField>
+
+**Returns:** `OnCallSchedule` - The requested on-call schedule object.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+schedule_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+schedule = client.on_call_schedules.get_on_call_schedule(
+    on_call_schedule_id=schedule_id
+)
+
+print(f"Schedule name: {schedule.name}")
+print(f"Schedule details: {schedule}")
+```
+
+---
+
+### get_on_call_schedules
+
+Returns a list of `OnCallSchedule` objects.
+
+```python
+def get_on_call_schedules() -> OnCallScheduleList
+```
+
+**Returns:** `OnCallScheduleList` - A list of all on-call schedule objects.
+
+**Example:**
+
+```python
+schedules = client.on_call_schedules.get_on_call_schedules()
+
+print(f"Total schedules: {len(schedules.results)}")
+for schedule in schedules.results:
+    print(f"- {schedule.name} (ID: {schedule.id})")
+```
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object with additional HTTP metadata:
+
+- `create_on_call_schedule_with_http_info()`
+- `get_on_call_schedule_with_http_info()`
+- `get_on_call_schedules_with_http_info()`
+
+These methods return an `ApiResponse` object containing the response data, status code, and headers.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+schedule_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+response = client.on_call_schedules.get_on_call_schedule_with_http_info(
+    on_call_schedule_id=schedule_id
+)
+
+print(f"Status code: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+## Additional Parameters
+
+All methods support additional optional parameters for advanced use cases:
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single float for total request timeout, or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for a single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override the headers for a single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for a single request.
+</ParamField>
+
+## Use Cases
+
+On-call schedules are commonly used for:
+
+- **Incident Response**: Automatically route incidents to the engineer currently on-call
+- **Access Request Approvals**: Direct access requests to the appropriate on-call team member
+- **Notifications**: Send alerts to whoever is currently on-call for a particular service or team
+- **Escalation Policies**: Define escalation paths based on on-call schedules
+
+**Example: Finding who's currently on-call**
+
+```python
+from uuid import UUID
+
+schedule_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+schedule = client.on_call_schedules.get_on_call_schedule(
+    on_call_schedule_id=schedule_id
+)
+
+# Check the schedule details to see who is currently on-call
+print(f"Current on-call schedule: {schedule.name}")
+```

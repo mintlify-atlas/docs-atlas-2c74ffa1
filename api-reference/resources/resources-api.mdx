@@ -1,0 +1,982 @@
+---
+title: "ResourcesApi"
+description: "Manage resources and user access in the Opal Security platform"
+---
+
+The `ResourcesApi` class provides methods for creating, retrieving, updating, and deleting resources, as well as managing user and non-human identity access to those resources.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+
+# Access the resources API
+resources_api = client.resources
+```
+
+## Resource Management
+
+### create_resource
+
+Creates a new resource in the Opal Security platform.
+
+```python
+def create_resource(
+    create_resource_info: CreateResourceInfo
+) -> Resource
+```
+
+<ParamField path="create_resource_info" type="CreateResourceInfo" required>
+  Information about the resource to create. See the [end system objects documentation](https://docs.opal.dev/reference/end-system-objects) for details about importing resources.
+</ParamField>
+
+<ResponseField name="resource" type="Resource">
+  The created resource object
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import CreateResourceInfo
+
+# Create a new resource
+resource_info = CreateResourceInfo(
+    app_id="your-app-id",
+    name="Production Database",
+    resource_type="DATABASE",
+    remote_id="prod-db-001"
+)
+
+resource = client.resources.create_resource(resource_info)
+print(f"Created resource: {resource.name} (ID: {resource.resource_id})")
+```
+
+### get_resource
+
+Retrieves a resource by its ID.
+
+```python
+def get_resource(
+    resource_id: UUID
+) -> Resource
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to retrieve
+</ParamField>
+
+<ResponseField name="resource" type="Resource">
+  The requested resource object
+</ResponseField>
+
+**Example:**
+
+```python
+resource = client.resources.get_resource("550e8400-e29b-41d4-a716-446655440000")
+print(f"Resource: {resource.name}")
+print(f"Type: {resource.resource_type}")
+```
+
+### get_resources
+
+Retrieves a paginated list of resources.
+
+```python
+def get_resources(
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None,
+    app_id: Optional[UUID] = None,
+    resource_type: Optional[ResourceTypeEnum] = None,
+    name: Optional[str] = None
+) -> PaginatedResourcesList
+```
+
+<ParamField path="cursor" type="str">
+  Pagination cursor for fetching the next page of results
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page (max: 1000)
+</ParamField>
+
+<ParamField path="app_id" type="UUID">
+  Filter resources by application ID
+</ParamField>
+
+<ParamField path="resource_type" type="ResourceTypeEnum">
+  Filter resources by type
+</ParamField>
+
+<ParamField path="name" type="str">
+  Filter resources by name (partial match)
+</ParamField>
+
+<ResponseField name="results" type="List[Resource]">
+  List of resources matching the filter criteria
+</ResponseField>
+
+<ResponseField name="next" type="str">
+  Cursor for the next page of results
+</ResponseField>
+
+**Example:**
+
+```python
+# Get all resources
+response = client.resources.get_resources(page_size=100)
+for resource in response.results:
+    print(f"{resource.name} - {resource.resource_type}")
+
+# Get next page if available
+if response.next:
+    next_page = client.resources.get_resources(cursor=response.next)
+```
+
+### update_resources
+
+Updates multiple resources in a single request.
+
+```python
+def update_resources(
+    update_resource_info_list: UpdateResourceInfoList
+) -> None
+```
+
+<ParamField path="update_resource_info_list" type="UpdateResourceInfoList" required>
+  List of resource updates to apply
+</ParamField>
+
+**Example:**
+
+```python
+from opal_security.models import UpdateResourceInfoList, UpdateResourceInfo
+
+updates = UpdateResourceInfoList(
+    resources=[
+        UpdateResourceInfo(
+            resource_id="550e8400-e29b-41d4-a716-446655440000",
+            name="Updated Resource Name",
+            description="New description"
+        )
+    ]
+)
+
+client.resources.update_resources(updates)
+```
+
+### delete_resource
+
+Deletes a resource.
+
+```python
+def delete_resource(
+    resource_id: UUID
+) -> None
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to delete
+</ParamField>
+
+**Example:**
+
+```python
+client.resources.delete_resource("550e8400-e29b-41d4-a716-446655440000")
+print("Resource deleted successfully")
+```
+
+## User Access Management
+
+### add_resource_user
+
+Adds a user to a resource, granting them access.
+
+```python
+def add_resource_user(
+    resource_id: UUID,
+    user_id: UUID,
+    duration_minutes: Optional[int] = None,
+    access_level_remote_id: Optional[str] = None,
+    add_resource_user_request: Optional[AddResourceUserRequest] = None
+) -> ResourceUser
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to add
+</ParamField>
+
+<ParamField path="duration_minutes" type="int">
+  Duration for which the resource can be accessed (in minutes). Use 0 for indefinite access. Maximum: 525960 minutes (1 year).
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level to grant. If omitted, the default access level (empty string) is used.
+</ParamField>
+
+<ParamField path="add_resource_user_request" type="AddResourceUserRequest">
+  Additional request parameters
+</ParamField>
+
+<ResponseField name="resource_user" type="ResourceUser">
+  The created resource user relationship
+</ResponseField>
+
+**Example:**
+
+```python
+# Grant user access for 24 hours
+resource_user = client.resources.add_resource_user(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440001",
+    duration_minutes=1440  # 24 hours
+)
+
+print(f"User {resource_user.user_id} added to resource")
+```
+
+### get_resource_user
+
+Retrieves information about a specific user's access to a resource.
+
+```python
+def get_resource_user(
+    resource_id: UUID,
+    user_id: UUID,
+    access_level_remote_id: Optional[str] = None
+) -> GetResourceUser200Response
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level. If omitted, the default access level is assumed.
+</ParamField>
+
+<ResponseField name="resource_user" type="GetResourceUser200Response">
+  Information about the user's access to the resource
+</ResponseField>
+
+**Example:**
+
+```python
+user_access = client.resources.get_resource_user(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440001"
+)
+```
+
+### get_resource_users
+
+Retrieves a list of users who have access to a resource.
+
+```python
+def get_resource_users(
+    resource_id: UUID
+) -> ResourceAccessUserList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="users" type="ResourceAccessUserList">
+  List of users with access to the resource
+</ResponseField>
+
+**Example:**
+
+```python
+users = client.resources.get_resource_users("550e8400-e29b-41d4-a716-446655440000")
+for user in users.results:
+    print(f"User: {user.email}, Access Level: {user.access_level}")
+```
+
+### get_user_resources
+
+Retrieves all resources accessible by a specific user.
+
+```python
+def get_user_resources(
+    user_id: UUID
+) -> AccessList
+```
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ResponseField name="resources" type="AccessList">
+  List of resources the user can access
+</ResponseField>
+
+**Example:**
+
+```python
+user_resources = client.resources.get_user_resources("660e8400-e29b-41d4-a716-446655440001")
+for resource in user_resources.results:
+    print(f"{resource.name} - {resource.access_level}")
+```
+
+### update_resource_user
+
+Updates a user's access to a resource.
+
+```python
+def update_resource_user(
+    resource_id: UUID,
+    user_id: UUID,
+    duration_minutes: Optional[int] = None,
+    access_level_remote_id: Optional[str] = None,
+    update_resource_user_request: Optional[UpdateResourceUserRequest] = None
+) -> ResourceUser
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ParamField path="duration_minutes" type="int">
+  New duration for access (in minutes). Use 0 for indefinite access.
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level
+</ParamField>
+
+<ParamField path="update_resource_user_request" type="UpdateResourceUserRequest">
+  Additional update parameters
+</ParamField>
+
+<ResponseField name="resource_user" type="ResourceUser">
+  The updated resource user relationship
+</ResponseField>
+
+**Example:**
+
+```python
+# Extend user access to 7 days
+updated_user = client.resources.update_resource_user(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440001",
+    duration_minutes=10080  # 7 days
+)
+```
+
+### delete_resource_user
+
+Removes a user's direct access from a resource.
+
+```python
+def delete_resource_user(
+    resource_id: UUID,
+    user_id: UUID,
+    access_level_remote_id: Optional[str] = None
+) -> None
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to remove
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level for which the user has direct access. If omitted, the default access level is assumed.
+</ParamField>
+
+**Example:**
+
+```python
+client.resources.delete_resource_user(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440001"
+)
+print("User access revoked")
+```
+
+### resource_user_access_status_retrieve
+
+Retrieves the access status of a user for a specific resource.
+
+```python
+def resource_user_access_status_retrieve(
+    resource_id: UUID,
+    user_id: UUID,
+    access_level_remote_id: Optional[str] = None
+) -> ResourceUserAccessStatus
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level
+</ParamField>
+
+<ResponseField name="access_status" type="ResourceUserAccessStatus">
+  The user's access status for the resource
+</ResponseField>
+
+**Example:**
+
+```python
+status = client.resources.resource_user_access_status_retrieve(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    user_id="660e8400-e29b-41d4-a716-446655440001"
+)
+print(f"Access Status: {status.status}")
+```
+
+## Non-Human Identity Access
+
+### add_resource_nhi
+
+Grants a non-human identity access to a resource.
+
+```python
+def add_resource_nhi(
+    resource_id: UUID,
+    non_human_identity_id: UUID,
+    add_resource_nhi_request: Optional[AddResourceNhiRequest] = None
+) -> ResourceNHI
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="non_human_identity_id" type="UUID" required>
+  The resource ID of the non-human identity to add
+</ParamField>
+
+<ParamField path="add_resource_nhi_request" type="AddResourceNhiRequest">
+  Additional request parameters
+</ParamField>
+
+<ResponseField name="resource_nhi" type="ResourceNHI">
+  The created resource NHI relationship
+</ResponseField>
+
+**Example:**
+
+```python
+resource_nhi = client.resources.add_resource_nhi(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    non_human_identity_id="770e8400-e29b-41d4-a716-446655440002"
+)
+print(f"NHI added to resource")
+```
+
+### get_resource_nhis
+
+Retrieves all non-human identities that have access to a resource.
+
+```python
+def get_resource_nhis(
+    resource_id: UUID
+) -> ResourceAccessUserList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="nhis" type="ResourceAccessUserList">
+  List of non-human identities with access to the resource
+</ResponseField>
+
+**Example:**
+
+```python
+nhis = client.resources.get_resource_nhis("550e8400-e29b-41d4-a716-446655440000")
+for nhi in nhis.results:
+    print(f"NHI: {nhi.name}")
+```
+
+### delete_resource_nhi
+
+Removes a non-human identity's direct access from a resource.
+
+```python
+def delete_resource_nhi(
+    resource_id: UUID,
+    non_human_identity_id: UUID,
+    access_level_remote_id: Optional[str] = None
+) -> None
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="non_human_identity_id" type="UUID" required>
+  The resource ID of the non-human identity to remove
+</ParamField>
+
+<ParamField path="access_level_remote_id" type="str">
+  The remote ID of the access level for which the NHI has direct access. If omitted, the default access level is assumed.
+</ParamField>
+
+**Example:**
+
+```python
+client.resources.delete_resource_nhi(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    non_human_identity_id="770e8400-e29b-41d4-a716-446655440002"
+)
+print("NHI access revoked")
+```
+
+## Resource Configuration
+
+### get_resource_groups
+
+Returns a list of groups that grant access to a resource.
+
+```python
+def get_resource_groups(
+    resource_id: UUID
+) -> GroupResourceList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="groups" type="GroupResourceList">
+  List of groups that grant access to the resource
+</ResponseField>
+
+**Example:**
+
+```python
+groups = client.resources.get_resource_groups("550e8400-e29b-41d4-a716-446655440000")
+for group in groups.results:
+    print(f"Group: {group.name}")
+```
+
+### get_resource_tags
+
+Retrieves tags associated with a resource.
+
+```python
+def get_resource_tags(
+    resource_id: UUID
+) -> TagsList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="tags" type="TagsList">
+  List of tags on the resource
+</ResponseField>
+
+**Example:**
+
+```python
+tags = client.resources.get_resource_tags("550e8400-e29b-41d4-a716-446655440000")
+for tag in tags.results:
+    print(f"Tag: {tag.key}={tag.value}")
+```
+
+### get_resource_visibility
+
+Gets the visibility settings for a resource.
+
+```python
+def get_resource_visibility(
+    resource_id: UUID
+) -> VisibilityInfo
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="visibility" type="VisibilityInfo">
+  Visibility settings for the resource
+</ResponseField>
+
+**Example:**
+
+```python
+visibility = client.resources.get_resource_visibility("550e8400-e29b-41d4-a716-446655440000")
+print(f"Is Visible: {visibility.is_visible}")
+```
+
+### set_resource_visibility
+
+Sets the visibility settings for a resource.
+
+```python
+def set_resource_visibility(
+    resource_id: UUID,
+    visibility_info: VisibilityInfo
+) -> VisibilityInfo
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="visibility_info" type="VisibilityInfo" required>
+  The visibility settings to apply
+</ParamField>
+
+<ResponseField name="visibility" type="VisibilityInfo">
+  The updated visibility settings
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import VisibilityInfo
+
+visibility = VisibilityInfo(is_visible=True)
+updated_visibility = client.resources.set_resource_visibility(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    visibility_info=visibility
+)
+```
+
+## Reviewers and Approvals
+
+### get_resource_reviewers
+
+Gets the list of reviewers for a resource.
+
+```python
+def get_resource_reviewers(
+    resource_id: UUID
+) -> ReviewerIDList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="reviewers" type="ReviewerIDList">
+  List of reviewer IDs
+</ResponseField>
+
+**Example:**
+
+```python
+reviewers = client.resources.get_resource_reviewers("550e8400-e29b-41d4-a716-446655440000")
+for reviewer_id in reviewers.results:
+    print(f"Reviewer ID: {reviewer_id}")
+```
+
+### set_resource_reviewers
+
+Sets the list of reviewers for a resource.
+
+```python
+def set_resource_reviewers(
+    resource_id: UUID,
+    reviewer_id_list: ReviewerIDList
+) -> ReviewerIDList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="reviewer_id_list" type="ReviewerIDList" required>
+  List of reviewer IDs to set
+</ParamField>
+
+<ResponseField name="reviewers" type="ReviewerIDList">
+  The updated list of reviewer IDs
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import ReviewerIDList
+
+reviewers = ReviewerIDList(
+    results=["660e8400-e29b-41d4-a716-446655440001"]
+)
+updated_reviewers = client.resources.set_resource_reviewers(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    reviewer_id_list=reviewers
+)
+```
+
+### get_resource_reviewer_stages
+
+Gets the reviewer stages for a resource.
+
+```python
+def get_resource_reviewer_stages(
+    resource_id: UUID
+) -> ReviewerStageList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="stages" type="ReviewerStageList">
+  List of reviewer stages
+</ResponseField>
+
+**Example:**
+
+```python
+stages = client.resources.get_resource_reviewer_stages("550e8400-e29b-41d4-a716-446655440000")
+for stage in stages.results:
+    print(f"Stage {stage.stage_number}: {stage.reviewers}")
+```
+
+### set_resource_reviewer_stages
+
+Sets the reviewer stages for a resource.
+
+```python
+def set_resource_reviewer_stages(
+    resource_id: UUID,
+    reviewer_stage_list: ReviewerStageList
+) -> ReviewerStageList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="reviewer_stage_list" type="ReviewerStageList" required>
+  List of reviewer stages to set
+</ParamField>
+
+<ResponseField name="stages" type="ReviewerStageList">
+  The updated list of reviewer stages
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import ReviewerStageList, ReviewerStage
+
+stages = ReviewerStageList(
+    results=[
+        ReviewerStage(
+            stage_number=1,
+            reviewers=["660e8400-e29b-41d4-a716-446655440001"]
+        )
+    ]
+)
+updated_stages = client.resources.set_resource_reviewer_stages(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    reviewer_stage_list=stages
+)
+```
+
+## Message Channels
+
+### get_resource_message_channels
+
+Gets the list of audit message channels attached to a resource.
+
+```python
+def get_resource_message_channels(
+    resource_id: UUID
+) -> MessageChannelList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="channels" type="MessageChannelList">
+  List of message channels
+</ResponseField>
+
+**Example:**
+
+```python
+channels = client.resources.get_resource_message_channels("550e8400-e29b-41d4-a716-446655440000")
+for channel in channels.results:
+    print(f"Channel: {channel.name}")
+```
+
+### set_resource_message_channels
+
+Sets the list of audit message channels for a resource.
+
+```python
+def set_resource_message_channels(
+    resource_id: UUID,
+    message_channel_id_list: MessageChannelIDList
+) -> MessageChannelList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="message_channel_id_list" type="MessageChannelIDList" required>
+  List of message channel IDs to set
+</ParamField>
+
+<ResponseField name="channels" type="MessageChannelList">
+  The updated list of message channels
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import MessageChannelIDList
+
+channels = MessageChannelIDList(
+    message_channel_ids=["880e8400-e29b-41d4-a716-446655440003"]
+)
+updated_channels = client.resources.set_resource_message_channels(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    message_channel_id_list=channels
+)
+```
+
+## Permissions
+
+### get_resource_scoped_role_permissions
+
+Gets the scoped role permissions for a resource.
+
+```python
+def get_resource_scoped_role_permissions(
+    resource_id: UUID
+) -> ScopedRolePermissionList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ResponseField name="permissions" type="ScopedRolePermissionList">
+  List of scoped role permissions
+</ResponseField>
+
+**Example:**
+
+```python
+permissions = client.resources.get_resource_scoped_role_permissions("550e8400-e29b-41d4-a716-446655440000")
+for permission in permissions.results:
+    print(f"Role: {permission.role}, Permission: {permission.permission}")
+```
+
+### set_resource_scoped_role_permissions
+
+Sets the scoped role permissions for a resource.
+
+```python
+def set_resource_scoped_role_permissions(
+    resource_id: UUID,
+    scoped_role_permission_list: ScopedRolePermissionList
+) -> ScopedRolePermissionList
+```
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource
+</ParamField>
+
+<ParamField path="scoped_role_permission_list" type="ScopedRolePermissionList" required>
+  List of scoped role permissions to set
+</ParamField>
+
+<ResponseField name="permissions" type="ScopedRolePermissionList">
+  The updated list of scoped role permissions
+</ResponseField>
+
+**Example:**
+
+```python
+from opal_security.models import ScopedRolePermissionList
+
+permissions = ScopedRolePermissionList(
+    results=[...]
+)
+updated_permissions = client.resources.set_resource_scoped_role_permissions(
+    resource_id="550e8400-e29b-41d4-a716-446655440000",
+    scoped_role_permission_list=permissions
+)
+```
+
+## Complete Example
+
+Here's a complete example showing how to manage resources and user access:
+
+```python
+from opal_security import Opal
+from opal_security.models import CreateResourceInfo
+
+# Initialize client
+client = Opal(api_key="YOUR_API_KEY")
+
+# Create a new resource
+resource_info = CreateResourceInfo(
+    app_id="your-app-id",
+    name="Production Database",
+    resource_type="DATABASE",
+    remote_id="prod-db-001"
+)
+resource = client.resources.create_resource(resource_info)
+print(f"Created resource: {resource.resource_id}")
+
+# Grant user access for 24 hours
+resource_user = client.resources.add_resource_user(
+    resource_id=resource.resource_id,
+    user_id="660e8400-e29b-41d4-a716-446655440001",
+    duration_minutes=1440
+)
+print(f"User access granted")
+
+# List all users with access
+users = client.resources.get_resource_users(resource.resource_id)
+for user in users.results:
+    print(f"- {user.email} ({user.access_level})")
+
+# Revoke user access
+client.resources.delete_resource_user(
+    resource_id=resource.resource_id,
+    user_id="660e8400-e29b-41d4-a716-446655440001"
+)
+print("User access revoked")
+
+# List all resources
+all_resources = client.resources.get_resources(page_size=100)
+for res in all_resources.results:
+    print(f"{res.name} - {res.resource_type}")
+```
+
+## Related
+
+- [Managing Resources Guide](/guides/managing-resources)
+- [Resources Concepts](/concepts/resources)
+- [Groups API](/api-reference/groups/groups-api)
+- [API Reference Introduction](/api-reference/introduction)

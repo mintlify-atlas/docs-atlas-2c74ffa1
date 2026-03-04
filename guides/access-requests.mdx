@@ -1,0 +1,473 @@
+---
+title: "Access Requests"
+description: "Learn how to create and manage access requests with the Opal Python SDK"
+---
+
+Access requests enable users to request temporary or permanent access to resources and groups. This guide shows you how to create, approve, deny, and manage access requests programmatically.
+
+## Overview
+
+The `RequestsApi` class provides methods to:
+- Create access requests for resources and groups
+- Approve or deny pending requests
+- Add comments to requests
+- Retrieve request details and status
+- List and filter requests
+
+## Creating Access Requests
+
+<Steps>
+  <Step title="Create a basic resource access request">
+    Use the `create_request()` method to request access to resources:
+
+    ```python
+    from opal_security import Opal
+    from opal_security.models import CreateRequestInfo, CreateRequestInfoResourcesInner
+    from uuid import UUID
+
+    client = Opal(
+        api_key="YOUR_API_KEY"
+    )
+
+    # Create a request for resource access
+    resource_request = CreateRequestInfoResourcesInner(
+        resource_id=UUID("resource-uuid"),
+        access_level_remote_id="read-only",
+        duration_minutes=1440  # 24 hours
+    )
+
+    request_info = CreateRequestInfo(
+        reason="Need access to debug production issue",
+        resources=[resource_request]
+    )
+
+    response = client.requests.create_request(
+        create_request_info=request_info
+    )
+
+    print(f"Request created: {response.request_id}")
+    print(f"Status: {response.status}")
+    ```
+  </Step>
+
+  <Step title="Create a group access request">
+    Request access to a group:
+
+    ```python
+    from opal_security.models import CreateRequestInfoGroupsInner
+
+    # Create a request for group membership
+    group_request = CreateRequestInfoGroupsInner(
+        group_id=UUID("group-uuid"),
+        access_level_remote_id="member",
+        duration_minutes=10080  # 7 days
+    )
+
+    request_info = CreateRequestInfo(
+        reason="Joining the engineering team for the Q1 project",
+        groups=[group_request]
+    )
+
+    response = client.requests.create_request(
+        create_request_info=request_info
+    )
+    ```
+  </Step>
+
+  <Step title="Create a request for multiple resources">
+    Request access to multiple resources in a single request:
+
+    ```python
+    # Request access to multiple resources
+    resources = [
+        CreateRequestInfoResourcesInner(
+            resource_id=UUID("database-uuid"),
+            access_level_remote_id="read-only"
+        ),
+        CreateRequestInfoResourcesInner(
+            resource_id=UUID("api-uuid"),
+            access_level_remote_id="developer"
+        )
+    ]
+
+    request_info = CreateRequestInfo(
+        reason="Setting up development environment",
+        resources=resources,
+        duration_minutes=43200  # 30 days
+    )
+
+    response = client.requests.create_request(
+        create_request_info=request_info
+    )
+    ```
+  </Step>
+</Steps>
+
+## Managing Requests
+
+### Retrieving Request Information
+
+Get details about a specific request:
+
+```python
+from uuid import UUID
+
+request_id = UUID("request-uuid")
+
+# Get request details
+request = client.requests.get_request(
+    id=request_id
+)
+
+print(f"Request ID: {request.id}")
+print(f"Status: {request.status}")
+print(f"Requester: {request.requester_id}")
+print(f"Reason: {request.reason}")
+print(f"Created: {request.created_at}")
+```
+
+### Listing Requests
+
+<CodeGroup>
+
+```python List all requests
+# Get paginated list of requests
+requests = client.requests.get_requests(
+    page_size=50
+)
+
+for req in requests.results:
+    print(f"{req.id} - {req.status}")
+```
+
+```python Filter by status
+from opal_security.models import RequestStatusEnum
+
+# Get only pending requests
+pending_requests = client.requests.get_requests(
+    status=[RequestStatusEnum.PENDING]
+)
+
+print(f"Pending requests: {len(pending_requests.results)}")
+```
+
+```python Filter by requester
+# Get requests from a specific user
+user_requests = client.requests.get_requests(
+    requester_id=[UUID("user-uuid")]
+)
+```
+
+</CodeGroup>
+
+## Approving Requests
+
+Approve a pending access request:
+
+```python
+from opal_security.models import ApproveRequestRequest
+
+request_id = UUID("pending-request-uuid")
+
+# Approve the request
+approval_request = ApproveRequestRequest(
+    comment="Approved for production debugging"
+)
+
+response = client.requests.approve_request(
+    id=request_id,
+    approve_request_request=approval_request
+)
+
+print(f"Request approved: {response.request_id}")
+```
+
+Approve with custom duration:
+
+```python
+# Approve with modified duration
+approval_request = ApproveRequestRequest(
+    comment="Approved with reduced duration",
+    duration_minutes=480  # 8 hours instead of original request
+)
+
+response = client.requests.approve_request(
+    id=request_id,
+    approve_request_request=approval_request
+)
+```
+
+## Denying Requests
+
+Deny a pending access request:
+
+```python
+from opal_security.models import DenyRequestRequest
+
+request_id = UUID("pending-request-uuid")
+
+# Deny the request
+denial_request = DenyRequestRequest(
+    comment="Insufficient justification for access"
+)
+
+response = client.requests.deny_request(
+    id=request_id,
+    deny_request_request=denial_request
+)
+
+print(f"Request denied: {response.request_id}")
+```
+
+<Warning>
+Denying a request cannot be undone. Users will need to create a new request if they still need access.
+</Warning>
+
+## Adding Comments
+
+Add comments to requests for communication and audit trail:
+
+```python
+from opal_security.models import CreateRequestCommentRequest
+
+request_id = UUID("request-uuid")
+
+# Add a comment to the request
+comment_request = CreateRequestCommentRequest(
+    comment="Please provide more details about the use case"
+)
+
+response = client.requests.create_request_comment(
+    id=request_id,
+    create_request_comment_request=comment_request
+)
+
+print("Comment added successfully")
+```
+
+### Retrieving Comments
+
+```python
+# Get all comments for a request
+comments = client.requests.get_request_comments(
+    id=request_id
+)
+
+for comment in comments.results:
+    print(f"{comment.author_id}: {comment.comment}")
+    print(f"Posted: {comment.created_at}\n")
+```
+
+## Complete Example: Request Workflow
+
+```python
+from opal_security import Opal
+from opal_security.models import (
+    CreateRequestInfo,
+    CreateRequestInfoResourcesInner,
+    ApproveRequestRequest,
+    DenyRequestRequest,
+    RequestStatusEnum
+)
+from uuid import UUID
+
+client = Opal(api_key="YOUR_API_KEY")
+
+def process_access_request(
+    client,
+    resource_id,
+    reason,
+    duration_minutes,
+    auto_approve=False
+):
+    """
+    Create and optionally auto-approve an access request.
+    """
+    # Create the request
+    resource_request = CreateRequestInfoResourcesInner(
+        resource_id=resource_id,
+        access_level_remote_id="read-only",
+        duration_minutes=duration_minutes
+    )
+
+    request_info = CreateRequestInfo(
+        reason=reason,
+        resources=[resource_request]
+    )
+
+    response = client.requests.create_request(
+        create_request_info=request_info
+    )
+    request_id = response.request_id
+    print(f"Created request: {request_id}")
+
+    # Auto-approve if enabled
+    if auto_approve:
+        approval = ApproveRequestRequest(
+            comment="Auto-approved by system"
+        )
+        client.requests.approve_request(
+            id=request_id,
+            approve_request_request=approval
+        )
+        print("Request auto-approved")
+
+    return request_id
+
+# Usage
+request_id = process_access_request(
+    client,
+    resource_id=UUID("database-uuid"),
+    reason="Emergency production access",
+    duration_minutes=240,  # 4 hours
+    auto_approve=True
+)
+```
+
+## Batch Processing Requests
+
+```python
+def approve_all_pending_requests(client, comment="Bulk approval"):
+    """
+    Approve all pending access requests.
+    """
+    # Get all pending requests
+    pending = client.requests.get_requests(
+        status=[RequestStatusEnum.PENDING],
+        page_size=100
+    )
+
+    approval_request = ApproveRequestRequest(comment=comment)
+    approved_count = 0
+
+    for request in pending.results:
+        try:
+            client.requests.approve_request(
+                id=request.id,
+                approve_request_request=approval_request
+            )
+            approved_count += 1
+            print(f"Approved request {request.id}")
+        except Exception as e:
+            print(f"Failed to approve {request.id}: {e}")
+
+    return approved_count
+
+# Usage
+count = approve_all_pending_requests(client)
+print(f"Approved {count} requests")
+```
+
+## Request Status Monitoring
+
+```python
+import time
+from opal_security.models import RequestStatusEnum
+
+def wait_for_request_approval(client, request_id, timeout=3600):
+    """
+    Wait for a request to be approved or denied.
+    """
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        request = client.requests.get_request(id=request_id)
+
+        if request.status == RequestStatusEnum.APPROVED:
+            print("Request approved!")
+            return True
+        elif request.status == RequestStatusEnum.DENIED:
+            print("Request denied")
+            return False
+
+        # Check every 30 seconds
+        time.sleep(30)
+
+    print("Timeout waiting for request decision")
+    return None
+
+# Usage
+request_id = UUID("request-uuid")
+approved = wait_for_request_approval(client, request_id)
+```
+
+## Working with Support Tickets
+
+Integrate access requests with ticketing systems:
+
+```python
+from opal_security.models import CreateRequestInfoSupportTicket
+
+# Create request with support ticket reference
+support_ticket = CreateRequestInfoSupportTicket(
+    ticket_id="JIRA-1234",
+    ticket_url="https://company.atlassian.net/browse/JIRA-1234"
+)
+
+request_info = CreateRequestInfo(
+    reason="Access needed for incident response",
+    resources=[resource_request],
+    support_ticket=support_ticket
+)
+
+response = client.requests.create_request(
+    create_request_info=request_info
+)
+```
+
+## Custom Metadata
+
+Add custom metadata to requests:
+
+```python
+from opal_security.models import CreateRequestInfoCustomMetadataInner
+
+# Add custom metadata
+metadata = [
+    CreateRequestInfoCustomMetadataInner(
+        key="department",
+        value="Engineering"
+    ),
+    CreateRequestInfoCustomMetadataInner(
+        key="project",
+        value="Q1 Migration"
+    )
+]
+
+request_info = CreateRequestInfo(
+    reason="Project access",
+    resources=[resource_request],
+    custom_metadata=metadata
+)
+
+response = client.requests.create_request(
+    create_request_info=request_info
+)
+```
+
+## Best Practices
+
+1. **Provide clear reasons**: Always include detailed, specific reasons for access requests.
+
+2. **Use appropriate durations**: Request only the time needed for the task.
+
+3. **Add comments**: Use comments to communicate with approvers and document decisions.
+
+4. **Monitor request status**: Check request status programmatically rather than waiting for email notifications.
+
+5. **Audit requests**: Regularly review approved and denied requests for compliance.
+
+6. **Automate approvals carefully**: Only auto-approve requests that meet specific, well-defined criteria.
+
+7. **Link to tickets**: When possible, reference external tickets or issues for better tracking.
+
+<Tip>
+Requests can be used to implement Just-In-Time (JIT) access patterns where users request temporary elevated privileges only when needed.
+</Tip>
+
+## Related Resources
+
+- [Managing Resources](/guides/managing-resources)
+- [Managing Groups](/guides/managing-groups)
+- [Error Handling](/guides/error-handling)
+- [API Reference: RequestsApi](/api-reference/requests/create-request)

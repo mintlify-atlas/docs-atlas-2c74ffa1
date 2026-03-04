@@ -1,0 +1,215 @@
+---
+title: "Users and Groups"
+description: "Understanding users, groups, and membership relationships in the Opal Python SDK"
+---
+
+## Overview
+
+Users and groups are fundamental entities in Opal that represent people in your organization and collections of users with shared access permissions. The SDK provides comprehensive models for working with user identities, group memberships, and access relationships.
+
+## User Model
+
+The `User` object represents an individual person in your organization. Users are synchronized from your identity provider and can be granted access to resources and groups.
+
+### User Structure
+
+```python
+from opal_security.models import User
+
+user = User(
+    user_id="550e8400-e29b-41d4-a716-446655440000",
+    email="alice@example.com",
+    full_name="Alice Johnson",
+    first_name="Alice",
+    last_name="Johnson",
+    position="Software Engineer",
+    hr_idp_status="ACTIVE"
+)
+```
+
+### Key User Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `user_id` | UUID | Unique identifier for the user |
+| `email` | str | User's email address |
+| `full_name` | str | Complete name of the user |
+| `first_name` | str | User's first name |
+| `last_name` | str | User's last name |
+| `position` | str | User's job title or position |
+| `hr_idp_status` | UserHrIdpStatusEnum | User status in HR/IDP system |
+
+<Note>
+All user properties are required except `hr_idp_status`, which indicates whether the user is active, inactive, or deprovisioned in your identity provider.
+</Note>
+
+## Group Model
+
+The `Group` object represents a collection of users with shared access permissions. Groups can be linked to remote systems (like Okta groups, AWS IAM roles, etc.) or managed entirely within Opal.
+
+### Group Structure
+
+```python
+from opal_security.models import Group
+
+group = Group(
+    group_id="650e8400-e29b-41d4-a716-446655440000",
+    app_id="750e8400-e29b-41d4-a716-446655440000",
+    name="Engineering Team",
+    description="All engineers with production access",
+    admin_owner_id="550e8400-e29b-41d4-a716-446655440000",
+    group_type="OKTA_GROUP",
+    max_duration=480,  # 8 hours in minutes
+    recommended_duration=240,  # 4 hours
+    require_manager_approval=True,
+    auto_approval=False,
+    is_requestable=True
+)
+```
+
+### Key Group Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `group_id` | UUID | Unique identifier for the group |
+| `app_id` | UUID | ID of the connected application |
+| `name` | str | Name of the group |
+| `description` | str | Description of the group's purpose |
+| `admin_owner_id` | UUID | User ID of the group owner |
+| `group_type` | GroupTypeEnum | Type of group (OKTA_GROUP, AWS_ROLE, etc.) |
+| `max_duration` | int | Maximum access duration in minutes |
+| `recommended_duration` | int | Recommended access duration in minutes |
+| `require_manager_approval` | bool | Whether manager approval is required |
+| `require_support_ticket` | bool | Whether a support ticket is required |
+| `auto_approval` | bool | Whether requests are auto-approved |
+| `is_requestable` | bool | Whether users can request access |
+
+<Info>
+The `recommended_duration` of `-1` represents indefinite access duration.
+</Info>
+
+### Access Control Settings
+
+Groups support granular access control configurations:
+
+```python
+# Configure a group with strict security requirements
+group = Group(
+    group_id=group_id,
+    name="Production Database Admins",
+    require_manager_approval=True,
+    require_support_ticket=True,
+    require_mfa_to_request=True,
+    require_mfa_to_approve=True,
+    max_duration=120,  # 2 hours maximum
+    extensions_duration_in_minutes=60  # Can extend by 1 hour
+)
+```
+
+## Group Membership
+
+The `GroupUser` object represents a user's membership in a group, including their access level and expiration.
+
+### GroupUser Structure
+
+```python
+from opal_security.models import GroupUser, GroupAccessLevel
+
+group_user = GroupUser(
+    group_id="650e8400-e29b-41d4-a716-446655440000",
+    group_name="Engineering Team",
+    description="All engineers with production access",
+    user_id="550e8400-e29b-41d4-a716-446655440000",
+    full_name="Alice Johnson",
+    email="alice@example.com",
+    access_level=GroupAccessLevel(
+        access_level_name="Member",
+        access_level_remote_id="member"
+    ),
+    expiration_date="2026-03-11T10:00:00Z"
+)
+```
+
+### Access Levels
+
+Access levels define the specific permissions a user has within a group. The `GroupAccessLevel` object includes:
+
+- **`access_level_name`**: Human-readable name (e.g., "Member", "Admin", "Owner")
+- **`access_level_remote_id`**: Machine-readable identifier used by the remote system
+
+<Note>
+The "default" access level is represented by empty strings in both fields, indicating standard member access.
+</Note>
+
+## Working with Users and Groups
+
+### Fetching Users
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="your-api-key")
+
+# List all users in your organization
+response = client.users.get_users(page_size=100)
+for user in response.results:
+    print(f"{user.full_name} ({user.email}) - {user.position}")
+```
+
+### Fetching Groups
+
+```python
+# List all groups
+response = client.groups.get_groups(page_size=100)
+for group in response.results:
+    print(f"{group.name} - {group.description}")
+
+# Get a specific group
+group = client.groups.get_group(group_id="650e8400-e29b-41d4-a716-446655440000")
+```
+
+### Managing Group Memberships
+
+```python
+# Add a user to a group
+client.groups.add_user(
+    group_id="650e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000"
+)
+
+# List users in a group
+group_users = client.groups.get_group_users(
+    group_id="650e8400-e29b-41d4-a716-446655440000"
+)
+for membership in group_users.results:
+    print(f"{membership.full_name} - {membership.access_level.access_level_name}")
+
+# Remove a user from a group
+client.groups.remove_user(
+    group_id="650e8400-e29b-41d4-a716-446655440000",
+    user_id="550e8400-e29b-41d4-a716-446655440000"
+)
+```
+
+<CardGroup cols={2}>
+  <Card title="Resources" icon="database" href="/concepts/resources">
+    Learn about resources and access levels
+  </Card>
+  <Card title="Access Requests" icon="paper-plane" href="/concepts/access-requests">
+    Understand the access request workflow
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+1. **Use UUIDs consistently**: Always reference users and groups by their `user_id` and `group_id` UUIDs
+2. **Check group settings**: Before adding users, verify the group's `is_requestable` and access control settings
+3. **Handle expiration dates**: Be aware that group memberships can have expiration dates for temporary access
+4. **Monitor access levels**: Different access levels grant different permissions - always specify the appropriate level
+5. **Respect request configurations**: Groups may have `request_configurations` that define approval workflows
+
+## Related Resources
+
+- [API Reference: Users](/api-reference/users/list-users)
+- [API Reference: Groups](/api-reference/groups/list-groups)
+- [Pagination Guide](/concepts/pagination)

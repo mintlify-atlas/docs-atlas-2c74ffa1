@@ -1,0 +1,625 @@
+---
+title: "TagsApi"
+description: "Complete reference for the TagsApi class in the Opal Python SDK"
+---
+
+The `TagsApi` class provides methods to manage tags and apply them to resources, groups, and users in Opal.
+
+## Constructor
+
+```python
+from opal_security import ApiClient
+from opal_security.api import TagsApi
+
+api_client = ApiClient()
+api = TagsApi(api_client)
+```
+
+<ParamField path="api_client" type="ApiClient" default="ApiClient.get_default()">
+  Optional API client instance. If not provided, uses the default client.
+</ParamField>
+
+## Methods
+
+### add_group_tag
+
+Applies a tag to a group.
+
+```python
+api.add_group_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    group_id="234e5678-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to apply.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group to apply the tag to.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`POST /tags/{tag_id}/groups/{group_id}`
+
+---
+
+### add_resource_tag
+
+Applies a tag to a resource.
+
+```python
+api.add_resource_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    resource_id="234e5678-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to apply.
+</ParamField>
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to apply the tag to.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`POST /tags/{tag_id}/resources/{resource_id}`
+
+---
+
+### add_user_tag
+
+Applies a tag to a user.
+
+```python
+api.add_user_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    user_id="234e5678-e89b-12d3-a456-426614174000",
+    body={}
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to apply.
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to apply the tag to.
+</ParamField>
+
+<ParamField path="body" type="Dict[str, Any]">
+  Optional request body.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`POST /tags/{tag_id}/users/{user_id}`
+
+---
+
+### create_tag
+
+Creates a tag with the given key and value.
+
+```python
+tag = api.create_tag(
+    tag_key="environment",
+    tag_value="production",
+    admin_owner_id="123e4567-e89b-12d3-a456-426614174000",
+    create_tag_info=create_info
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_key" type="str">
+  The key of the tag to create.
+</ParamField>
+
+<ParamField path="tag_value" type="str">
+  The value of the tag to create.
+</ParamField>
+
+<ParamField path="admin_owner_id" type="UUID">
+  The ID of the owner that manages the tag.
+</ParamField>
+
+<ParamField path="create_tag_info" type="CreateTagInfo">
+  Additional tag information.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Tag` - The created tag object.
+
+#### HTTP Request
+
+`POST /tag`
+
+---
+
+### delete_tag_by_id
+
+Deletes a tag with the given ID.
+
+<Warning>
+UNSTABLE: This method may be removed at any time.
+</Warning>
+
+```python
+api.delete_tag_by_id(
+    tag_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to delete.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /tag/{tag_id}`
+
+---
+
+### get_tag
+
+Gets a tag with the given key and value.
+
+```python
+tag = api.get_tag(
+    tag_key="environment",
+    tag_value="production"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_key" type="str" required>
+  The key of the tag to retrieve.
+</ParamField>
+
+<ParamField path="tag_value" type="str">
+  The value of the tag to retrieve.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Tag` - The tag object.
+
+#### HTTP Request
+
+`GET /tag`
+
+---
+
+### get_tag_by_id
+
+Gets a tag with the given ID.
+
+<Warning>
+UNSTABLE: This method may be removed at any time.
+</Warning>
+
+```python
+tag = api.get_tag_by_id(
+    tag_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to retrieve.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`Tag` - The tag object.
+
+#### HTTP Request
+
+`GET /tag/{tag_id}`
+
+---
+
+### get_tags
+
+Returns a list of tags created by your organization.
+
+```python
+tags = api.get_tags(
+    cursor="cursor_value",
+    page_size=100
+)
+```
+
+#### Parameters
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value for fetching the next page.
+</ParamField>
+
+<ParamField path="page_size" type="int" default="200">
+  Number of results to return per page. Maximum is 1000.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`PaginatedTagsList` - A paginated list of tag objects.
+
+#### HTTP Request
+
+`GET /tags`
+
+---
+
+### remove_group_tag
+
+Removes a tag from a group.
+
+```python
+api.remove_group_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    group_id="234e5678-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to remove.
+</ParamField>
+
+<ParamField path="group_id" type="UUID" required>
+  The ID of the group to remove the tag from.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /tags/{tag_id}/groups/{group_id}`
+
+---
+
+### remove_resource_tag
+
+Removes a tag from a resource.
+
+```python
+api.remove_resource_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    resource_id="234e5678-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to remove.
+</ParamField>
+
+<ParamField path="resource_id" type="UUID" required>
+  The ID of the resource to remove the tag from.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /tags/{tag_id}/resources/{resource_id}`
+
+---
+
+### remove_user_tag
+
+Removes a tag from a user.
+
+```python
+api.remove_user_tag(
+    tag_id="123e4567-e89b-12d3-a456-426614174000",
+    user_id="234e5678-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="tag_id" type="UUID" required>
+  The ID of the tag to remove.
+</ParamField>
+
+<ParamField path="user_id" type="UUID" required>
+  The ID of the user to remove the tag from.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /tags/{tag_id}/users/{user_id}`
+
+---
+
+## HTTP Response Variants
+
+Each method has two additional variants for advanced use cases:
+
+### with_http_info
+
+Returns an `ApiResponse` object containing the response data, HTTP status code, and headers:
+
+```python
+response = api.get_tag_with_http_info(
+    tag_key="environment",
+    tag_value="production"
+)
+print(response.data)  # The Tag object
+print(response.status_code)  # HTTP status code
+print(response.headers)  # Response headers
+```
+
+### without_preload_content
+
+Returns the raw HTTP response without deserializing the content:
+
+```python
+raw_response = api.get_tag_without_preload_content(
+    tag_key="environment",
+    tag_value="production"
+)
+```

@@ -1,0 +1,227 @@
+---
+title: "ConfigurationTemplatesApi"
+description: "Complete reference for the ConfigurationTemplatesApi class in the Opal Python SDK"
+---
+
+The `ConfigurationTemplatesApi` class provides methods to manage configuration templates in Opal.
+
+## Constructor
+
+```python
+from opal_security import ApiClient
+from opal_security.api import ConfigurationTemplatesApi
+
+api_client = ApiClient()
+api = ConfigurationTemplatesApi(api_client)
+```
+
+<ParamField path="api_client" type="ApiClient" default="ApiClient.get_default()">
+  Optional API client instance. If not provided, uses the default client.
+</ParamField>
+
+## Methods
+
+### create_configuration_template
+
+Creates a configuration template.
+
+```python
+template = api.create_configuration_template(
+    create_configuration_template_info=create_info
+)
+```
+
+#### Parameters
+
+<ParamField path="create_configuration_template_info" type="CreateConfigurationTemplateInfo" required>
+  Configuration template information to create.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`ConfigurationTemplate` - The created configuration template object.
+
+#### HTTP Request
+
+`POST /configuration-templates`
+
+---
+
+### delete_configuration_template
+
+Deletes a configuration template.
+
+```python
+api.delete_configuration_template(
+    configuration_template_id="123e4567-e89b-12d3-a456-426614174000"
+)
+```
+
+#### Parameters
+
+<ParamField path="configuration_template_id" type="UUID" required>
+  The ID of the configuration template to delete.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`None`
+
+#### HTTP Request
+
+`DELETE /configuration-templates/{configuration_template_id}`
+
+---
+
+### get_configuration_templates
+
+Returns a list of configuration template objects.
+
+```python
+templates = api.get_configuration_templates()
+```
+
+#### Parameters
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`PaginatedConfigurationTemplateList` - A paginated list of configuration template objects.
+
+#### HTTP Request
+
+`GET /configuration-templates`
+
+---
+
+### update_configuration_template
+
+Updates a configuration template.
+
+```python
+updated_template = api.update_configuration_template(
+    update_configuration_template_info=update_info
+)
+```
+
+#### Parameters
+
+<ParamField path="update_configuration_template_info" type="UpdateConfigurationTemplateInfo" required>
+  Configuration template to be updated.
+</ParamField>
+
+<ParamField path="_request_timeout" type="Union[None, float, Tuple[float, float]]">
+  Timeout setting for this request. Can be a single number for total timeout, or a tuple of (connection, read) timeouts.
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for this single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override headers for this single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int" default="0">
+  Override the host_index for this single request.
+</ParamField>
+
+#### Returns
+
+`ConfigurationTemplate` - The updated configuration template object.
+
+#### HTTP Request
+
+`PUT /configuration-templates`
+
+---
+
+## HTTP Response Variants
+
+Each method has two additional variants for advanced use cases:
+
+### with_http_info
+
+Returns an `ApiResponse` object containing the response data, HTTP status code, and headers:
+
+```python
+response = api.create_configuration_template_with_http_info(
+    create_configuration_template_info=create_info
+)
+print(response.data)  # The ConfigurationTemplate object
+print(response.status_code)  # HTTP status code
+print(response.headers)  # Response headers
+```
+
+### without_preload_content
+
+Returns the raw HTTP response without deserializing the content:
+
+```python
+raw_response = api.create_configuration_template_without_preload_content(
+    create_configuration_template_info=create_info
+)
+```

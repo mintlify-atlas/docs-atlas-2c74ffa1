@@ -1,0 +1,155 @@
+---
+title: "MessageChannelsApi"
+description: "API reference for managing message channels in Opal"
+---
+
+The `MessageChannelsApi` class provides methods to manage message channels in Opal. Message channels are used for notifications and communication within the Opal platform.
+
+## Initialization
+
+```python
+from opal_security import Opal
+
+client = Opal(api_key="YOUR_API_KEY")
+message_channels_api = client.message_channels
+```
+
+## Methods
+
+### create_message_channel
+
+Creates a `MessageChannel` object.
+
+```python
+def create_message_channel(
+    create_message_channel_info: CreateMessageChannelInfo
+) -> MessageChannel
+```
+
+<ParamField body="create_message_channel_info" type="CreateMessageChannelInfo" required>
+  The `MessageChannel` object to be created.
+</ParamField>
+
+**Returns:** `MessageChannel` - The created message channel object.
+
+**Example:**
+
+```python
+from opal_security.models import CreateMessageChannelInfo
+
+channel_info = CreateMessageChannelInfo(
+    name="Engineering Team Channel",
+    # Add additional channel configuration here
+)
+
+channel = client.message_channels.create_message_channel(
+    create_message_channel_info=channel_info
+)
+
+print(f"Channel created: {channel.id}")
+```
+
+---
+
+### get_message_channel
+
+Gets a `MessageChannel` object by ID.
+
+```python
+def get_message_channel(
+    message_channel_id: UUID
+) -> MessageChannel
+```
+
+<ParamField path="message_channel_id" type="UUID" required>
+  The ID of the message channel.
+</ParamField>
+
+**Returns:** `MessageChannel` - The requested message channel object.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+channel_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+channel = client.message_channels.get_message_channel(
+    message_channel_id=channel_id
+)
+
+print(f"Channel name: {channel.name}")
+print(f"Channel type: {channel.type}")
+```
+
+---
+
+### get_message_channels
+
+Returns a list of `MessageChannel` objects.
+
+```python
+def get_message_channels() -> MessageChannelList
+```
+
+**Returns:** `MessageChannelList` - A list of all message channel objects.
+
+**Example:**
+
+```python
+channels = client.message_channels.get_message_channels()
+
+print(f"Total channels: {len(channels.results)}")
+for channel in channels.results:
+    print(f"- {channel.name} (ID: {channel.id})")
+```
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object with additional HTTP metadata:
+
+- `create_message_channel_with_http_info()`
+- `get_message_channel_with_http_info()`
+- `get_message_channels_with_http_info()`
+
+These methods return an `ApiResponse` object containing the response data, status code, and headers.
+
+**Example:**
+
+```python
+from uuid import UUID
+
+channel_id = UUID("123e4567-e89b-12d3-a456-426614174000")
+
+response = client.message_channels.get_message_channel_with_http_info(
+    message_channel_id=channel_id
+)
+
+print(f"Status code: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Data: {response.data}")
+```
+
+## Additional Parameters
+
+All methods support additional optional parameters for advanced use cases:
+
+<ParamField path="_request_timeout" type="Union[float, Tuple[float, float]]">
+  Timeout setting for the request. Can be a single float for total request timeout, or a tuple of (connection timeout, read timeout).
+</ParamField>
+
+<ParamField path="_request_auth" type="Dict[str, Any]">
+  Override the authentication settings for a single request.
+</ParamField>
+
+<ParamField path="_content_type" type="str">
+  Force a specific content-type for the request.
+</ParamField>
+
+<ParamField path="_headers" type="Dict[str, Any]">
+  Override the headers for a single request.
+</ParamField>
+
+<ParamField path="_host_index" type="int">
+  Override the host index for a single request.
+</ParamField>
