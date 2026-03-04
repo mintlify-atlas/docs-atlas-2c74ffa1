@@ -1,0 +1,146 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Opal Python SDK",
+  "projectDescription": "Python SDK for the Opal Security platform API",
+  "theme": "palm",
+  "primaryColor": "#9ec254",
+  "lightColor": "#403f40",
+  "darkColor": "#f1f3e7",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication",
+              "configuration"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/users-and-groups",
+              "concepts/resources",
+              "concepts/access-requests",
+              "concepts/pagination"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/managing-users",
+              "guides/managing-groups",
+              "guides/managing-resources",
+              "guides/access-requests",
+              "guides/error-handling"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Users",
+            "pages": [
+              "api-reference/users/users-api"
+            ]
+          },
+          {
+            "group": "Groups",
+            "pages": [
+              "api-reference/groups/groups-api",
+              "api-reference/groups/group-bindings-api"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "api-reference/resources/resources-api"
+            ]
+          },
+          {
+            "group": "Access Management",
+            "pages": [
+              "api-reference/access/requests-api",
+              "api-reference/access/access-rules-api",
+              "api-reference/access/delegations-api"
+            ]
+          },
+          {
+            "group": "Applications",
+            "pages": [
+              "api-reference/apps/apps-api",
+              "api-reference/apps/bundles-api"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api-reference/configuration/configuration-templates-api",
+              "api-reference/configuration/owners-api",
+              "api-reference/configuration/tags-api"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "api-reference/integrations/idp-group-mappings-api",
+              "api-reference/integrations/message-channels-api",
+              "api-reference/integrations/on-call-schedules-api"
+            ]
+          },
+          {
+            "group": "Monitoring",
+            "pages": [
+              "api-reference/monitoring/events-api",
+              "api-reference/monitoring/sessions-api",
+              "api-reference/monitoring/uars-api"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Manage users and groups programmatically",
+    "Control access to resources with fine-grained permissions",
+    "Automate access request workflows",
+    "Integrate with identity providers and external systems",
+    "Monitor and audit access events",
+    "Support for 20+ API endpoints across all resource types"
+  ],
+  "publicApiSurface": [
+    "AccessRulesApi",
+    "AppsApi",
+    "BundlesApi",
+    "ConfigurationTemplatesApi",
+    "DelegationsApi",
+    "EventsApi",
+    "GroupBindingsApi",
+    "GroupsApi",
+    "IdpGroupMappingsApi",
+    "MessageChannelsApi",
+    "NonHumanIdentitiesApi",
+    "OnCallSchedulesApi",
+    "OwnersApi",
+    "RequestsApi",
+    "ResourcesApi",
+    "SessionsApi",
+    "TagsApi",
+    "UarsApi",
+    "UsersApi",
+    "Configuration",
+    "ApiClient"
+  ]
+}
