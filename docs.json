@@ -70,7 +70,8 @@
           {
             "group": "Users",
             "pages": [
-              "api-reference/users/users-api"
+              "api-reference/users/users-api",
+              "api-reference/users/non-human-identities-api"
             ]
           },
           {

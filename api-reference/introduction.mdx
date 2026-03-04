@@ -10,97 +10,97 @@ The Opal Python SDK provides a comprehensive set of API classes to interact with
 All API classes are available through the `opal_security` package:
 
 ```python
-from opal_security import UsersApi, GroupsApi, ResourcesApi
-from opal_security import ApiClient, Configuration
+import opal_security as opal
+import os
 
 # Configure the client
-configuration = Configuration(
-    api_key={'BearerAuth': 'your-api-key'}
+configuration = opal.Configuration(
+    access_token=os.environ["OPAL_API_TOKEN"]
 )
 
 # Create API instances
-with ApiClient(configuration) as api_client:
-    users_api = UsersApi(api_client)
-    groups_api = GroupsApi(api_client)
-    resources_api = ResourcesApi(api_client)
+with opal.ApiClient(configuration) as api_client:
+    users_api = opal.UsersApi(api_client)
+    groups_api = opal.GroupsApi(api_client)
+    resources_api = opal.ResourcesApi(api_client)
 ```
 
 ## Available API Classes
 
 <CardGroup cols={2}>
-  <Card title="Users" icon="users" href="/api-reference/users">
+  <Card title="Users" icon="users" href="/api-reference/users/users-api">
     Manage user accounts and identities
   </Card>
   
-  <Card title="Groups" icon="layer-group" href="/api-reference/groups">
+  <Card title="Groups" icon="layer-group" href="/api-reference/groups/groups-api">
     Manage groups and group memberships
   </Card>
   
-  <Card title="Resources" icon="server" href="/api-reference/resources">
+  <Card title="Resources" icon="server" href="/api-reference/resources/resources-api">
     Manage resources and resource access
   </Card>
   
-  <Card title="Requests" icon="file-circle-check" href="/api-reference/requests">
+  <Card title="Requests" icon="file-circle-check" href="/api-reference/access/requests-api">
     Create and manage access requests
   </Card>
   
-  <Card title="Apps" icon="grid" href="/api-reference/apps">
+  <Card title="Apps" icon="grid" href="/api-reference/apps/apps-api">
     Manage connected applications
   </Card>
   
-  <Card title="Access Rules" icon="shield-check" href="/api-reference/access-rules">
+  <Card title="Access Rules" icon="shield-check" href="/api-reference/access/access-rules-api">
     Configure automated access rules
   </Card>
   
-  <Card title="Bundles" icon="box" href="/api-reference/bundles">
+  <Card title="Bundles" icon="box" href="/api-reference/apps/bundles-api">
     Manage access bundles
   </Card>
   
-  <Card title="Tags" icon="tag" href="/api-reference/tags">
+  <Card title="Tags" icon="tag" href="/api-reference/configuration/tags-api">
     Organize resources with tags
   </Card>
   
-  <Card title="Owners" icon="user-crown" href="/api-reference/owners">
+  <Card title="Owners" icon="user-crown" href="/api-reference/configuration/owners-api">
     Manage resource owners
   </Card>
   
-  <Card title="Group Bindings" icon="link" href="/api-reference/group-bindings">
+  <Card title="Group Bindings" icon="link" href="/api-reference/groups/group-bindings-api">
     Configure group binding rules
   </Card>
   
-  <Card title="IDP Group Mappings" icon="diagram-project" href="/api-reference/idp-group-mappings">
+  <Card title="IDP Group Mappings" icon="diagram-project" href="/api-reference/integrations/idp-group-mappings-api">
     Map identity provider groups
   </Card>
   
-  <Card title="Delegations" icon="user-plus" href="/api-reference/delegations">
+  <Card title="Delegations" icon="user-plus" href="/api-reference/access/delegations-api">
     Manage delegation policies
   </Card>
   
-  <Card title="Configuration Templates" icon="file-lines" href="/api-reference/configuration-templates">
+  <Card title="Configuration Templates" icon="file-lines" href="/api-reference/configuration/configuration-templates-api">
     Manage configuration templates
   </Card>
   
-  <Card title="Message Channels" icon="messages" href="/api-reference/message-channels">
+  <Card title="Message Channels" icon="messages" href="/api-reference/integrations/message-channels-api">
     Configure notification channels
   </Card>
   
-  <Card title="On-Call Schedules" icon="calendar-clock" href="/api-reference/on-call-schedules">
+  <Card title="On-Call Schedules" icon="calendar-clock" href="/api-reference/integrations/on-call-schedules-api">
     Manage on-call schedules
   </Card>
   
-  <Card title="Sessions" icon="clock-rotate-left" href="/api-reference/sessions">
+  <Card title="Sessions" icon="clock-rotate-left" href="/api-reference/monitoring/sessions-api">
     Manage user sessions
   </Card>
   
-  <Card title="Events" icon="timeline" href="/api-reference/events">
+  <Card title="Events" icon="timeline" href="/api-reference/monitoring/events-api">
     Access audit logs and events
   </Card>
   
-  <Card title="UARs" icon="clipboard-check" href="/api-reference/uars">
+  <Card title="UARs" icon="clipboard-check" href="/api-reference/monitoring/uars-api">
     Manage User Access Reviews
   </Card>
   
-  <Card title="Non-Human Identities" icon="robot" href="/api-reference/non-human-identities">
+  <Card title="Non-Human Identities" icon="robot" href="/api-reference/users/non-human-identities-api">
     Manage service accounts and bots
   </Card>
 </CardGroup>
@@ -149,11 +149,11 @@ In addition to the API classes, the SDK provides essential core classes:
     Get started with common use cases
   </Card>
   
-  <Card title="Examples" icon="code" href="/examples">
-    Browse code examples and recipes
+  <Card title="Guides" icon="code" href="/guides/managing-users">
+    Browse practical guides and examples
   </Card>
   
-  <Card title="Error Handling" icon="triangle-exclamation" href="/error-handling">
+  <Card title="Error Handling" icon="triangle-exclamation" href="/guides/error-handling">
     Handle errors and exceptions
   </Card>
 </CardGroup>

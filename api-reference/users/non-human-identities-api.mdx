@@ -1,0 +1,187 @@
+---
+title: "Non-Human Identities API"
+description: "Manage service accounts, bots, and other non-human identities in your organization"
+---
+
+## Overview
+
+The `NonHumanIdentitiesApi` class provides methods for retrieving non-human identities (NHIs) such as service accounts, bots, and other automated entities in your organization.
+
+## Constructor
+
+```python
+from opal_security import ApiClient, NonHumanIdentitiesApi
+
+api_client = ApiClient(configuration)
+nhis_api = NonHumanIdentitiesApi(api_client)
+```
+
+## Methods
+
+### get_nhis
+
+Retrieves a paginated list of non-human identities for your organization.
+
+```python
+def get_nhis(
+    cursor: Optional[str] = None,
+    page_size: Optional[int] = None,
+    _request_timeout: Optional[float] = None
+) -> PaginatedResourcesList
+```
+
+<ParamField path="cursor" type="str">
+  The pagination cursor value for fetching the next page of results.
+</ParamField>
+
+<ParamField path="page_size" type="int">
+  Number of results to return per page. Default is 200, maximum is 1000.
+</ParamField>
+
+<ParamField path="_request_timeout" type="float">
+  Timeout setting for this request in seconds.
+</ParamField>
+
+**Returns:** `PaginatedResourcesList` - A paginated list of non-human identity resources.
+
+**HTTP Method:** `GET /non-human-identities`
+
+#### Example
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="YOUR_API_TOKEN"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    nhis_api = opal.NonHumanIdentitiesApi(api_client)
+    
+    # Get all non-human identities
+    nhis = nhis_api.get_nhis(page_size=100)
+    
+    for nhi in nhis.results:
+        print(f"NHI: {nhi.name} ({nhi.resource_type})")
+        print(f"  Remote ID: {nhi.remote_id}")
+        print(f"  App: {nhi.app_id}")
+```
+
+#### Pagination Example
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="YOUR_API_TOKEN"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    nhis_api = opal.NonHumanIdentitiesApi(api_client)
+    
+    all_nhis = []
+    cursor = None
+    
+    while True:
+        response = nhis_api.get_nhis(
+            cursor=cursor,
+            page_size=200
+        )
+        
+        all_nhis.extend(response.results)
+        
+        if not response.next:
+            break
+            
+        cursor = response.next
+    
+    print(f"Total non-human identities: {len(all_nhis)}")
+```
+
+---
+
+## HTTP Info Methods
+
+Each method has a corresponding `*_with_http_info` variant that returns an `ApiResponse` object containing both the response data and HTTP metadata:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="YOUR_API_TOKEN"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    nhis_api = opal.NonHumanIdentitiesApi(api_client)
+    
+    # Get HTTP response info
+    response = nhis_api.get_nhis_with_http_info(page_size=50)
+    
+    print(f"Status Code: {response.status_code}")
+    print(f"Headers: {response.headers}")
+    print(f"Data: {response.data}")
+```
+
+---
+
+## Use Cases
+
+### Inventory Service Accounts
+
+Get a complete inventory of all service accounts and bots in your organization:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="YOUR_API_TOKEN"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    nhis_api = opal.NonHumanIdentitiesApi(api_client)
+    
+    nhis = nhis_api.get_nhis(page_size=500)
+    
+    # Group by app
+    by_app = {}
+    for nhi in nhis.results:
+        app_id = nhi.app_id
+        if app_id not in by_app:
+            by_app[app_id] = []
+        by_app[app_id].append(nhi)
+    
+    for app_id, app_nhis in by_app.items():
+        print(f"App {app_id}: {len(app_nhis)} non-human identities")
+```
+
+### Monitor NHI Access
+
+Monitor which non-human identities have access to resources:
+
+```python
+import opal_security as opal
+
+configuration = opal.Configuration(
+    access_token="YOUR_API_TOKEN"
+)
+
+with opal.ApiClient(configuration) as api_client:
+    nhis_api = opal.NonHumanIdentitiesApi(api_client)
+    resources_api = opal.ResourcesApi(api_client)
+    
+    # Get all NHIs
+    nhis = nhis_api.get_nhis()
+    
+    for nhi in nhis.results:
+        # Get resources this NHI has access to
+        nhi_resources = resources_api.get_resource_nhis(nhi.resource_id)
+        print(f"{nhi.name}: {len(nhi_resources.results)} resources")
+```
+
+---
+
+## Related
+
+- [Resources API](/api-reference/resources/resources-api) - Manage NHI access to resources
+- [Users API](/api-reference/users/users-api) - Manage human users
+- [API Reference Introduction](/api-reference/introduction)
